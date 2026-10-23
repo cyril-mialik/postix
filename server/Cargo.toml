@@ -1,0 +1,29 @@
+[package]
+name = "server"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "server"
+path = "src/main.rs"
+
+[dependencies]
+chrono = { workspace = true }
+sqlx = { workspace = true }
+tokio = { workspace = true }
+actix-web = { workspace = true }
+dotenvy = { workspace = true }
+actix-cors = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+jsonwebtoken = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+argon2 = { workspace = true }
+password-hash = { workspace = true }
+futures-util = { workspace = true }
+deadpool-redis = { workspace = true }
+redis = { workspace = true }
+cookie = { workspace = true }
+async-trait = { workspace = true }
