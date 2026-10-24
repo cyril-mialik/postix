@@ -1,4 +1,4 @@
-use crate::domain::entities::{auth::errors::AuthError, user::errors::UserError};
+use crate::domain::entities::{auth::AuthError, user::UserError};
 use thiserror::Error;
 
 #[derive(Debug, Error)]

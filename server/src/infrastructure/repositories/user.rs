@@ -5,9 +5,9 @@ use uuid::Uuid;
 use crate::domain::{
     entities::{
         errors::{DomainError, SystemError},
-        user::{entity::User, errors::UserError},
+        user::{User, UserError},
     },
-    repositories::user::repository::UserRepository,
+    repositories::user::UserRepository,
 };
 
 pub struct PostgresUserRepository {

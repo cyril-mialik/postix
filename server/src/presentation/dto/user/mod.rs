@@ -16,17 +16,19 @@ pub struct UserResponse {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)] // It used actually
 pub struct UpdateEmailRequest {
     pub new_email: String,
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)] // It used actually
 pub struct UpdatePasswordRequest {
     pub new_password: String,
 }
 
-impl From<crate::domain::entities::user::entity::User> for UserResponse {
-    fn from(user: crate::domain::entities::user::entity::User) -> Self {
+impl From<crate::domain::entities::user::User> for UserResponse {
+    fn from(user: crate::domain::entities::user::User) -> Self {
         Self {
             id: user.id,
             email: user.email,

@@ -27,3 +27,4 @@ deadpool-redis = { workspace = true }
 redis = { workspace = true }
 cookie = { workspace = true }
 async-trait = { workspace = true }
+validator = { workspace = true }

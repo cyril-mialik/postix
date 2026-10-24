@@ -1,12 +1,13 @@
 use std::sync::Arc;
 use uuid::Uuid;
+use validator::Validate;
 
 use crate::domain::{
     entities::{
         errors::{DomainError, SystemError},
-        user::{entity::User, errors::UserError},
+        user::{User, UserError},
     },
-    repositories::user::repository::UserRepository,
+    repositories::user::UserRepository,
 };
 use crate::infrastructure::security::password::hash_password;
 
@@ -44,19 +45,21 @@ impl UserService {
 
     pub async fn update_email(&self, id: Uuid, new_email: &str) -> Result<User, DomainError> {
         let normalized = new_email.trim().to_lowercase();
+        let user = self
+            .find_by_email(&normalized)
+            .await?
+            .ok_or(UserError::UserNotFound)?;
 
-        if normalized.is_empty() || !normalized.contains('@') {
-            return Err(UserError::InvalidEmail.into());
-        }
+        user.validate().map_err(|_| UserError::InvalidEmail)?;
 
         self.repository.update_email(id, &normalized).await
     }
 
     pub async fn update_password(&self, id: Uuid, new_password: &str) -> Result<User, DomainError> {
-        let password_hash = hash_password(new_password)
+        let hashed_password = hash_password(new_password)
             .map_err(|_| DomainError::System(SystemError::PasswordHashFailed))?;
 
-        self.repository.update_password(id, &password_hash).await
+        self.repository.update_password(id, &hashed_password).await
     }
 
     pub async fn delete_user(&self, id: Uuid) -> Result<(), DomainError> {

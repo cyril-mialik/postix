@@ -2,7 +2,7 @@ use actix_web::{HttpRequest, HttpResponse, post, web};
 
 use crate::{
     application::auth::AuthService,
-    domain::entities::{auth::errors::AuthError, errors::DomainError},
+    domain::entities::{auth::AuthError, errors::DomainError},
     infrastructure::security::jwt::{REFRESH_TOKEN_NAME, build_refresh_cookie},
     presentation::dto::auth::AccessTokenResponse,
 };

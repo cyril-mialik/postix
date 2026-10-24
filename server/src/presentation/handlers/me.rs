@@ -2,7 +2,7 @@ use actix_web::{HttpResponse, delete, get, patch, web};
 
 use crate::{
     application::user::UserService,
-    domain::entities::{errors::DomainError, user::errors::UserError},
+    domain::entities::{errors::DomainError, user::UserError},
     presentation::{
         dto::user::{UpdateEmailRequest, UpdatePasswordRequest, UserResponse},
         extractors::jwt_auth::AuthenticatedUser,

@@ -1,4 +1,4 @@
-use crate::domain::entities::{errors::DomainError, user::entity::User};
+use crate::domain::entities::{errors::DomainError, user::User};
 use async_trait::async_trait;
 use uuid::Uuid;
 

@@ -2,11 +2,11 @@ use std::sync::Arc;
 
 use crate::domain::{
     entities::{
-        auth::errors::AuthError,
+        auth::AuthError,
         errors::{DomainError, SystemError},
-        user::entity::User,
+        user::User,
     },
-    repositories::{token::TokenRepository, user::repository::UserRepository},
+    repositories::{token::TokenRepository, user::UserRepository},
 };
 use crate::infrastructure::security::{
     jwt::{ACCESS_TOKEN_TTL, generate_access_token, generate_refresh_token, verify_refresh_token},

@@ -1,5 +1,5 @@
 use crate::domain::entities::{
-    auth::errors::AuthError, errors::DomainError, user::errors::UserError,
+    auth::AuthError, errors::DomainError, user::UserError,
 };
 use actix_web::{HttpResponse, ResponseError, http::StatusCode};
 
