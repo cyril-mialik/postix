@@ -1,18 +1,21 @@
 use crate::domain::entities::{
-    auth::AuthError, errors::DomainError, user::UserError,
+    auth::AuthError, errors::Error, post::PostError, user::UserError,
 };
 use actix_web::{HttpResponse, ResponseError, http::StatusCode};
 
-impl ResponseError for DomainError {
+impl ResponseError for Error {
     fn status_code(&self) -> StatusCode {
         match self {
-            DomainError::User(UserError::InvalidEmail) => StatusCode::BAD_REQUEST,
-            DomainError::User(UserError::EmailAlreadyExists) => StatusCode::CONFLICT,
-            DomainError::User(UserError::UserNotFound) => StatusCode::NOT_FOUND,
-            DomainError::Auth(AuthError::InvalidCredentials) => StatusCode::UNAUTHORIZED,
-            DomainError::Auth(AuthError::InvalidToken) => StatusCode::UNAUTHORIZED,
-            DomainError::Auth(AuthError::TokenRevoked) => StatusCode::UNAUTHORIZED,
-            DomainError::System(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::User(UserError::InvalidEmail) => StatusCode::BAD_REQUEST,
+            Error::User(UserError::EmailAlreadyExists) => StatusCode::CONFLICT,
+            Error::User(UserError::UserNotFound) => StatusCode::NOT_FOUND,
+            Error::Auth(AuthError::InvalidCredentials) => StatusCode::UNAUTHORIZED,
+            Error::Auth(AuthError::InvalidToken) => StatusCode::UNAUTHORIZED,
+            Error::Auth(AuthError::TokenRevoked) => StatusCode::UNAUTHORIZED,
+            Error::Post(PostError::NotFound) => StatusCode::NOT_FOUND,
+            Error::Post(PostError::InvalidTitleLength) => StatusCode::BAD_REQUEST,
+            Error::Post(PostError::AlreadyExists) => StatusCode::CONFLICT,
+            Error::System(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 

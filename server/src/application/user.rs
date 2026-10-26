@@ -4,7 +4,7 @@ use validator::Validate;
 
 use crate::domain::{
     entities::{
-        errors::{DomainError, SystemError},
+        errors::{Error, SystemError},
         user::{User, UserError},
     },
     repositories::user::UserRepository,
@@ -20,7 +20,7 @@ impl UserService {
         Self { repository }
     }
 
-    pub async fn create_user(&self, email: String, password: &str) -> Result<User, DomainError> {
+    pub async fn create_user(&self, email: String, password: &str) -> Result<User, Error> {
         let user = User::new(email)?;
 
         if self.repository.find_by_email(&user.email).await?.is_some() {
@@ -28,22 +28,22 @@ impl UserService {
         }
 
         let password_hash = hash_password(password)
-            .map_err(|_| DomainError::System(SystemError::PasswordHashFailed))?;
+            .map_err(|_| Error::System(SystemError::PasswordHashFailed))?;
 
         let created_user = self.repository.create_user(&user, &password_hash).await?;
 
         Ok(created_user)
     }
 
-    pub async fn find_by_email(&self, email: &str) -> Result<Option<User>, DomainError> {
+    pub async fn find_by_email(&self, email: &str) -> Result<Option<User>, Error> {
         self.repository.find_by_email(email).await
     }
 
-    pub async fn find_by_id(&self, id: Uuid) -> Result<Option<User>, DomainError> {
+    pub async fn find_by_id(&self, id: Uuid) -> Result<Option<User>, Error> {
         self.repository.find_by_id(id).await
     }
 
-    pub async fn update_email(&self, id: Uuid, new_email: &str) -> Result<User, DomainError> {
+    pub async fn update_email(&self, id: Uuid, new_email: &str) -> Result<User, Error> {
         let normalized = new_email.trim().to_lowercase();
         let user = self
             .find_by_email(&normalized)
@@ -55,14 +55,14 @@ impl UserService {
         self.repository.update_email(id, &normalized).await
     }
 
-    pub async fn update_password(&self, id: Uuid, new_password: &str) -> Result<User, DomainError> {
+    pub async fn update_password(&self, id: Uuid, new_password: &str) -> Result<User, Error> {
         let hashed_password = hash_password(new_password)
-            .map_err(|_| DomainError::System(SystemError::PasswordHashFailed))?;
+            .map_err(|_| Error::System(SystemError::PasswordHashFailed))?;
 
         self.repository.update_password(id, &hashed_password).await
     }
 
-    pub async fn delete_user(&self, id: Uuid) -> Result<(), DomainError> {
+    pub async fn delete_user(&self, id: Uuid) -> Result<(), Error> {
         self.repository.delete_user(id).await
     }
 }

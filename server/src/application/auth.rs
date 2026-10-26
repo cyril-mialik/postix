@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::domain::{
     entities::{
         auth::AuthError,
-        errors::{DomainError, SystemError},
+        errors::{Error, SystemError},
         user::User,
     },
     repositories::{token::TokenRepository, user::UserRepository},
@@ -37,26 +37,26 @@ impl AuthService {
         }
     }
 
-    pub async fn sign_in(&self, email: String, password: &str) -> Result<TokenPair, DomainError> {
+    pub async fn sign_in(&self, email: String, password: &str) -> Result<TokenPair, Error> {
         let (user, password_hash) = self
             .user_repo
             .find_credentials_by_email(&email)
             .await?
-            .ok_or(DomainError::Auth(AuthError::InvalidCredentials))?;
+            .ok_or(Error::Auth(AuthError::InvalidCredentials))?;
 
         let is_valid = verify_password(password, &password_hash)
-            .map_err(|e| DomainError::System(SystemError::Internal(e.to_string())))?;
+            .map_err(|e| Error::System(SystemError::Internal(e.to_string())))?;
 
         if !is_valid {
-            return Err(DomainError::Auth(AuthError::InvalidCredentials));
+            return Err(Error::Auth(AuthError::InvalidCredentials));
         }
 
         self.issue_tokens(&user).await
     }
 
-    pub async fn refresh(&self, refresh_token: &str) -> Result<TokenPair, DomainError> {
+    pub async fn refresh(&self, refresh_token: &str) -> Result<TokenPair, Error> {
         let user_id = verify_refresh_token(&self.jwt_secret, refresh_token)
-            .map_err(|_| DomainError::Auth(AuthError::InvalidToken))?;
+            .map_err(|_| Error::Auth(AuthError::InvalidToken))?;
 
         let is_valid = self
             .token_repo
@@ -64,14 +64,14 @@ impl AuthService {
             .await?;
 
         if !is_valid {
-            return Err(DomainError::Auth(AuthError::TokenRevoked));
+            return Err(Error::Auth(AuthError::TokenRevoked));
         }
 
         let user = self
             .user_repo
             .find_by_id(user_id)
             .await?
-            .ok_or(DomainError::Auth(AuthError::InvalidToken))?;
+            .ok_or(Error::Auth(AuthError::InvalidToken))?;
 
         self.token_repo
             .revoke_refresh_token(user_id, refresh_token)
@@ -80,21 +80,21 @@ impl AuthService {
         self.issue_tokens(&user).await
     }
 
-    pub async fn sign_out(&self, refresh_token: &str) -> Result<(), DomainError> {
+    pub async fn sign_out(&self, refresh_token: &str) -> Result<(), Error> {
         let user_id = verify_refresh_token(&self.jwt_secret, refresh_token)
-            .map_err(|_| DomainError::Auth(AuthError::InvalidToken))?;
+            .map_err(|_| Error::Auth(AuthError::InvalidToken))?;
 
         self.token_repo
             .revoke_refresh_token(user_id, refresh_token)
             .await
     }
 
-    async fn issue_tokens(&self, user: &User) -> Result<TokenPair, DomainError> {
+    async fn issue_tokens(&self, user: &User) -> Result<TokenPair, Error> {
         let access_token = generate_access_token(&self.jwt_secret, user.id)
-            .map_err(|e| DomainError::System(SystemError::Internal(e.to_string())))?;
+            .map_err(|e| Error::System(SystemError::Internal(e.to_string())))?;
 
         let refresh_token = generate_refresh_token(&self.jwt_secret, user.id)
-            .map_err(|e| DomainError::System(SystemError::Internal(e.to_string())))?;
+            .map_err(|e| Error::System(SystemError::Internal(e.to_string())))?;
 
         self.token_repo
             .save_refresh_token(user.id, &refresh_token, ACCESS_TOKEN_TTL)

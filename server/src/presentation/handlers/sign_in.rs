@@ -2,7 +2,7 @@ use actix_web::{HttpResponse, post, web};
 
 use crate::{
     application::auth::AuthService,
-    domain::entities::errors::DomainError,
+    domain::entities::errors::Error,
     infrastructure::security::jwt::build_refresh_cookie,
     presentation::dto::auth::{AccessTokenResponse, SignInRequest},
 };
@@ -11,7 +11,7 @@ use crate::{
 pub async fn sign_in(
     service: web::Data<AuthService>,
     payload: web::Json<SignInRequest>,
-) -> Result<HttpResponse, DomainError> {
+) -> Result<HttpResponse, Error> {
     let tokens = service
         .sign_in(payload.email.clone(), &payload.password)
         .await?;

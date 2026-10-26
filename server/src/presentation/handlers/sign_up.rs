@@ -3,7 +3,7 @@ use actix_web::{HttpResponse, post, web};
 use crate::{
     application::auth::AuthService,
     application::user::UserService,
-    domain::entities::errors::DomainError,
+    domain::entities::errors::Error,
     infrastructure::security::jwt::build_refresh_cookie,
     presentation::dto::{auth::AccessTokenResponse, user::SignUpRequest},
 };
@@ -13,7 +13,7 @@ pub async fn sign_up(
     user_service: web::Data<UserService>,
     auth_service: web::Data<AuthService>,
     payload: web::Json<SignUpRequest>,
-) -> Result<HttpResponse, DomainError> {
+) -> Result<HttpResponse, Error> {
     let _user = user_service
         .create_user(payload.email.clone(), &payload.password)
         .await?;

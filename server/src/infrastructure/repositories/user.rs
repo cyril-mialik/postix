@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::domain::{
     entities::{
-        errors::{DomainError, SystemError},
+        errors::{Error, SystemError},
         user::{User, UserError},
     },
     repositories::user::UserRepository,
@@ -22,7 +22,7 @@ impl PostgresUserRepository {
 
 #[async_trait]
 impl UserRepository for PostgresUserRepository {
-    async fn create_user(&self, user: &User, password_hash: &str) -> Result<User, DomainError> {
+    async fn create_user(&self, user: &User, password_hash: &str) -> Result<User, Error> {
         let created_user = sqlx::query_as!(
             User,
             r#"
@@ -39,13 +39,13 @@ impl UserRepository for PostgresUserRepository {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|e| DomainError::System(SystemError::Database(e.to_string())))?
-        .ok_or(DomainError::User(UserError::EmailAlreadyExists))?;
+        .map_err(|e| Error::System(SystemError::Database(e.to_string())))?
+        .ok_or(Error::User(UserError::EmailAlreadyExists))?;
 
         Ok(created_user)
     }
 
-    async fn find_by_email(&self, email: &str) -> Result<Option<User>, DomainError> {
+    async fn find_by_email(&self, email: &str) -> Result<Option<User>, Error> {
         let user = sqlx::query_as!(
             User,
             r#"
@@ -57,7 +57,7 @@ impl UserRepository for PostgresUserRepository {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|e| DomainError::System(SystemError::Database(e.to_string())))?;
+        .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
 
         Ok(user)
     }
@@ -65,7 +65,7 @@ impl UserRepository for PostgresUserRepository {
     async fn find_credentials_by_email(
         &self,
         email: &str,
-    ) -> Result<Option<(User, String)>, DomainError> {
+    ) -> Result<Option<(User, String)>, Error> {
         let record = sqlx::query!(
             r#"
             SELECT id, email, password, created_at, updated_at
@@ -76,7 +76,7 @@ impl UserRepository for PostgresUserRepository {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|e| DomainError::System(SystemError::Database(e.to_string())))?;
+        .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
 
         Ok(record.map(|r| {
             let user = User {
@@ -89,7 +89,7 @@ impl UserRepository for PostgresUserRepository {
         }))
     }
 
-    async fn find_by_id(&self, id: Uuid) -> Result<Option<User>, DomainError> {
+    async fn find_by_id(&self, id: Uuid) -> Result<Option<User>, Error> {
         let user = sqlx::query_as!(
             User,
             r#"
@@ -101,22 +101,22 @@ impl UserRepository for PostgresUserRepository {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|e| DomainError::System(SystemError::Database(e.to_string())))?;
+        .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
 
         Ok(user)
     }
 
-    async fn update_email(&self, id: Uuid, new_email: &str) -> Result<User, DomainError> {
+    async fn update_email(&self, id: Uuid, new_email: &str) -> Result<User, Error> {
         let exists = sqlx::query_scalar!(
             r#"SELECT EXISTS(SELECT 1 FROM users WHERE id = $1) as "exists!""#,
             id
         )
         .fetch_one(&self.pool)
         .await
-        .map_err(|e| DomainError::System(SystemError::Database(e.to_string())))?;
+        .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
 
         if !exists {
-            return Err(DomainError::User(UserError::UserNotFound));
+            return Err(Error::User(UserError::UserNotFound));
         }
 
         let updated_user = sqlx::query_as!(
@@ -133,23 +133,23 @@ impl UserRepository for PostgresUserRepository {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|e| DomainError::System(SystemError::Database(e.to_string())))?
-        .ok_or(DomainError::User(UserError::EmailAlreadyExists))?;
+        .map_err(|e| Error::System(SystemError::Database(e.to_string())))?
+        .ok_or(Error::User(UserError::EmailAlreadyExists))?;
 
         Ok(updated_user)
     }
 
-    async fn update_password(&self, id: Uuid, new_password: &str) -> Result<User, DomainError> {
+    async fn update_password(&self, id: Uuid, new_password: &str) -> Result<User, Error> {
         let exists = sqlx::query_scalar!(
             r#"SELECT EXISTS(SELECT 1 FROM users WHERE id = $1) as "exists!""#,
             id
         )
         .fetch_one(&self.pool)
         .await
-        .map_err(|e| DomainError::System(SystemError::Database(e.to_string())))?;
+        .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
 
         if !exists {
-            return Err(DomainError::User(UserError::UserNotFound));
+            return Err(Error::User(UserError::UserNotFound));
         }
 
         let updated_user = sqlx::query_as!(
@@ -166,13 +166,13 @@ impl UserRepository for PostgresUserRepository {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(|e| DomainError::System(SystemError::Database(e.to_string())))?
-        .ok_or(DomainError::User(UserError::UserNotFound))?;
+        .map_err(|e| Error::System(SystemError::Database(e.to_string())))?
+        .ok_or(Error::User(UserError::UserNotFound))?;
 
         Ok(updated_user)
     }
 
-    async fn delete_user(&self, id: Uuid) -> Result<(), DomainError> {
+    async fn delete_user(&self, id: Uuid) -> Result<(), Error> {
         let result = sqlx::query!(
             r#"
             DELETE FROM users
@@ -182,10 +182,10 @@ impl UserRepository for PostgresUserRepository {
         )
         .execute(&self.pool)
         .await
-        .map_err(|e| DomainError::System(SystemError::Database(e.to_string())))?;
+        .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
 
         if result.rows_affected() == 0 {
-            return Err(DomainError::User(UserError::UserNotFound));
+            return Err(Error::User(UserError::UserNotFound));
         }
 
         Ok(())

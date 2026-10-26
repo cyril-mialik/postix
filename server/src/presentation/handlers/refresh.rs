@@ -2,7 +2,7 @@ use actix_web::{HttpRequest, HttpResponse, post, web};
 
 use crate::{
     application::auth::AuthService,
-    domain::entities::{auth::AuthError, errors::DomainError},
+    domain::entities::{auth::AuthError, errors::Error},
     infrastructure::security::jwt::{REFRESH_TOKEN_NAME, build_refresh_cookie},
     presentation::dto::auth::AccessTokenResponse,
 };
@@ -11,11 +11,11 @@ use crate::{
 pub async fn refresh(
     service: web::Data<AuthService>,
     req: HttpRequest,
-) -> Result<HttpResponse, DomainError> {
+) -> Result<HttpResponse, Error> {
     let token = req
         .cookie(REFRESH_TOKEN_NAME)
         .map(|c| c.value().to_string())
-        .ok_or(DomainError::Auth(AuthError::InvalidToken))?;
+        .ok_or(Error::Auth(AuthError::InvalidToken))?;
 
     let tokens = service.refresh(&token).await?;
     let cookie = build_refresh_cookie(&tokens.refresh_token);

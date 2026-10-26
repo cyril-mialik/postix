@@ -10,3 +10,4 @@ pub struct SignInRequest {
 pub struct AccessTokenResponse {
     pub access_token: String,
 }
+

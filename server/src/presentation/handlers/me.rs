@@ -2,7 +2,7 @@ use actix_web::{HttpResponse, delete, get, patch, web};
 
 use crate::{
     application::user::UserService,
-    domain::entities::{errors::DomainError, user::UserError},
+    domain::entities::{errors::Error, user::UserError},
     presentation::{
         dto::user::{UpdateEmailRequest, UpdatePasswordRequest, UserResponse},
         extractors::jwt_auth::AuthenticatedUser,
@@ -13,11 +13,11 @@ use crate::{
 pub async fn get_me(
     auth: AuthenticatedUser,
     service: web::Data<UserService>,
-) -> Result<HttpResponse, DomainError> {
+) -> Result<HttpResponse, Error> {
     let user = service
         .find_by_id(auth.user_id)
         .await?
-        .ok_or(DomainError::User(UserError::UserNotFound))?;
+        .ok_or(Error::User(UserError::UserNotFound))?;
 
     Ok(HttpResponse::Ok().json(UserResponse::from(user)))
 }
@@ -27,7 +27,7 @@ pub async fn update_email(
     auth: AuthenticatedUser,
     service: web::Data<UserService>,
     payload: web::Json<UpdateEmailRequest>,
-) -> Result<HttpResponse, DomainError> {
+) -> Result<HttpResponse, Error> {
     let user = service
         .update_email(auth.user_id, &payload.new_email)
         .await?;
@@ -40,7 +40,7 @@ pub async fn update_password(
     auth: AuthenticatedUser,
     service: web::Data<UserService>,
     payload: web::Json<UpdatePasswordRequest>,
-) -> Result<HttpResponse, DomainError> {
+) -> Result<HttpResponse, Error> {
     service
         .update_password(auth.user_id, &payload.new_password)
         .await?;
@@ -52,7 +52,7 @@ pub async fn update_password(
 pub async fn delete_me(
     auth: AuthenticatedUser,
     service: web::Data<UserService>,
-) -> Result<HttpResponse, DomainError> {
+) -> Result<HttpResponse, Error> {
     service.delete_user(auth.user_id).await?;
     Ok(HttpResponse::NoContent().finish())
 }

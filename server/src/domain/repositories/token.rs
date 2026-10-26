@@ -1,4 +1,4 @@
-use crate::domain::entities::errors::DomainError;
+use crate::domain::entities::errors::Error;
 use async_trait::async_trait;
 use uuid::Uuid;
 
@@ -9,12 +9,12 @@ pub trait TokenRepository: Send + Sync {
         user_id: Uuid,
         token: &str,
         ttl_seconds: u64,
-    ) -> Result<(), DomainError>;
+    ) -> Result<(), Error>;
 
     async fn is_refresh_token_valid(&self, user_id: Uuid, token: &str)
-    -> Result<bool, DomainError>;
+    -> Result<bool, Error>;
 
-    async fn revoke_refresh_token(&self, user_id: Uuid, token: &str) -> Result<(), DomainError>;
+    async fn revoke_refresh_token(&self, user_id: Uuid, token: &str) -> Result<(), Error>;
 
-    async fn revoke_all_refresh_tokens(&self, user_id: Uuid) -> Result<(), DomainError>;
+    async fn revoke_all_refresh_tokens(&self, user_id: Uuid) -> Result<(), Error>;
 }
