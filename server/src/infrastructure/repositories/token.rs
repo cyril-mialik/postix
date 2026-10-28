@@ -45,11 +45,7 @@ impl TokenRepository for RedisTokenRepository {
         Ok(())
     }
 
-    async fn is_refresh_token_valid(
-        &self,
-        user_id: Uuid,
-        token: &str,
-    ) -> Result<bool, Error> {
+    async fn is_refresh_token_valid(&self, user_id: Uuid, token: &str) -> Result<bool, Error> {
         let mut conn = self
             .pool
             .get()

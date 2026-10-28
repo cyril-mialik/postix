@@ -1,11 +1,13 @@
 use async_trait::async_trait;
 use sqlx::PgPool;
-use uuid::Uuid;
 
 use crate::domain::{
     entities::{
         errors::{Error, SystemError},
-        post::{Post, PostError},
+        post::{
+            CreatePostDto, DeletePostDto, FindPostByIdDto, FindPostByUserIdDto, Post, PostError,
+            UpdatePostContentDto, UpdatePostDto, UpdatePostTitleDto,
+        },
     },
     repositories::post::PostRepository,
 };
@@ -22,16 +24,18 @@ impl PostgresPostRepository {
 
 #[async_trait]
 impl PostRepository for PostgresPostRepository {
-    async fn create_post(&self, post: &Post) -> Result<Post, Error> {
+    async fn create_post(&self, dto: CreatePostDto) -> Result<Post, Error> {
+        let post = Post::new(dto)?;
         let created_post = sqlx::query_as!(
             Post,
             r#"
-            INSERT INTO posts (id, title, content, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO posts (id, user_id, title, content, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6)
             ON CONFLICT (id) DO NOTHING
-            RETURNING id, title, content, created_at, updated_at
+            RETURNING id, user_id, title, content, created_at, updated_at
             "#,
             post.id,
+            post.user_id,
             post.title,
             post.content,
             post.created_at,
@@ -45,15 +49,15 @@ impl PostRepository for PostgresPostRepository {
         Ok(created_post)
     }
 
-    async fn find_by_id(&self, id: Uuid) -> Result<Option<Post>, Error> {
+    async fn find_by_id(&self, dto: FindPostByIdDto) -> Result<Option<Post>, Error> {
         let post = sqlx::query_as!(
             Post,
             r#"
-            SELECT id, title, content, created_at, updated_at
+            SELECT id, user_id, title, content, created_at, updated_at
             FROM posts
             WHERE id = $1
             "#,
-            id
+            dto.id
         )
         .fetch_optional(&self.pool)
         .await
@@ -62,15 +66,27 @@ impl PostRepository for PostgresPostRepository {
         Ok(post)
     }
 
-    async fn update_post(
-        &self,
-        id: Uuid,
-        new_title: &str,
-        new_content: &str,
-    ) -> Result<Post, Error> {
+    async fn find_by_user_id(&self, dto: FindPostByUserIdDto) -> Result<Vec<Post>, Error> {
+        let posts = sqlx::query_as!(
+            Post,
+            r#"
+            SELECT id, user_id, title, content, created_at, updated_at
+            FROM posts
+            WHERE user_id = $1
+            "#,
+            dto.user_id
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
+
+        Ok(posts)
+    }
+
+    async fn update_post(&self, dto: UpdatePostDto) -> Result<Post, Error> {
         let exists = sqlx::query_scalar!(
             r#"SELECT EXISTS(SELECT 1 FROM posts WHERE id = $1) as "exists!""#,
-            id
+            dto.id
         )
         .fetch_one(&self.pool)
         .await
@@ -86,11 +102,11 @@ impl PostRepository for PostgresPostRepository {
             UPDATE posts
             SET title = $2, content = $3, updated_at = $4
             WHERE id = $1
-            RETURNING id, title, content, created_at, updated_at
+            RETURNING id, user_id, title, content, created_at, updated_at
             "#,
-            id,
-            new_title,
-            new_content,
+            dto.id,
+            dto.new_title,
+            dto.new_content,
             chrono::Utc::now()
         )
         .fetch_optional(&self.pool)
@@ -101,10 +117,10 @@ impl PostRepository for PostgresPostRepository {
         Ok(updated_post)
     }
 
-    async fn update_title(&self, id: Uuid, new_title: &str) -> Result<Post, Error> {
+    async fn update_title(&self, dto: UpdatePostTitleDto) -> Result<Post, Error> {
         let exists = sqlx::query_scalar!(
             r#"SELECT EXISTS(SELECT 1 FROM posts WHERE id = $1) as "exists!""#,
-            id
+            dto.id
         )
         .fetch_one(&self.pool)
         .await
@@ -120,10 +136,10 @@ impl PostRepository for PostgresPostRepository {
             UPDATE posts
             SET title = $2, updated_at = $3
             WHERE id = $1
-            RETURNING id, title, content, created_at, updated_at
+            RETURNING id, user_id, title, content, created_at, updated_at
             "#,
-            id,
-            new_title,
+            dto.id,
+            dto.new_title,
             chrono::Utc::now()
         )
         .fetch_optional(&self.pool)
@@ -134,10 +150,10 @@ impl PostRepository for PostgresPostRepository {
         Ok(updated_post)
     }
 
-    async fn update_content(&self, id: Uuid, new_content: &str) -> Result<Post, Error> {
+    async fn update_content(&self, dto: UpdatePostContentDto) -> Result<Post, Error> {
         let exists = sqlx::query_scalar!(
             r#"SELECT EXISTS(SELECT 1 FROM posts WHERE id = $1) as "exists!""#,
-            id
+            dto.id
         )
         .fetch_one(&self.pool)
         .await
@@ -153,10 +169,10 @@ impl PostRepository for PostgresPostRepository {
             UPDATE posts
             SET content = $2, updated_at = $3
             WHERE id = $1
-            RETURNING id, title, content, created_at, updated_at
+            RETURNING id, user_id, title, content, created_at, updated_at
             "#,
-            id,
-            new_content,
+            dto.id,
+            dto.new_content,
             chrono::Utc::now()
         )
         .fetch_optional(&self.pool)
@@ -167,13 +183,13 @@ impl PostRepository for PostgresPostRepository {
         Ok(updated_content)
     }
 
-    async fn delete_post(&self, id: Uuid) -> Result<(), Error> {
+    async fn delete_post(&self, dto: DeletePostDto) -> Result<(), Error> {
         let result = sqlx::query!(
             r#"
             DELETE FROM posts
             WHERE id = $1
             "#,
-            id
+            dto.id
         )
         .execute(&self.pool)
         .await

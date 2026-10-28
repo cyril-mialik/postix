@@ -1,6 +1,4 @@
-use crate::domain::entities::{
-    auth::AuthError, errors::Error, post::PostError, user::UserError,
-};
+use crate::domain::entities::{auth::AuthError, errors::Error, post::PostError, user::UserError};
 use actix_web::{HttpResponse, ResponseError, http::StatusCode};
 
 impl ResponseError for Error {
