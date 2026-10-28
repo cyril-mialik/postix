@@ -8,10 +8,8 @@ pub trait UserRepository: Send + Sync {
 
     async fn find_by_email(&self, email: &str) -> Result<Option<User>, Error>;
 
-    async fn find_credentials_by_email(
-        &self,
-        email: &str,
-    ) -> Result<Option<(User, String)>, Error>;
+    async fn find_credentials_by_email(&self, email: &str)
+    -> Result<Option<(User, String)>, Error>;
 
     async fn find_by_id(&self, id: Uuid) -> Result<Option<User>, Error>;
 

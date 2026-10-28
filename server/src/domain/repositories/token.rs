@@ -11,8 +11,7 @@ pub trait TokenRepository: Send + Sync {
         ttl_seconds: u64,
     ) -> Result<(), Error>;
 
-    async fn is_refresh_token_valid(&self, user_id: Uuid, token: &str)
-    -> Result<bool, Error>;
+    async fn is_refresh_token_valid(&self, user_id: Uuid, token: &str) -> Result<bool, Error>;
 
     async fn revoke_refresh_token(&self, user_id: Uuid, token: &str) -> Result<(), Error>;
 

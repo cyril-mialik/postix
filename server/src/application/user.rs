@@ -27,8 +27,8 @@ impl UserService {
             return Err(UserError::EmailAlreadyExists.into());
         }
 
-        let password_hash = hash_password(password)
-            .map_err(|_| Error::System(SystemError::PasswordHashFailed))?;
+        let password_hash =
+            hash_password(password).map_err(|_| Error::System(SystemError::PasswordHashFailed))?;
 
         let created_user = self.repository.create_user(&user, &password_hash).await?;
 
