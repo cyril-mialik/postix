@@ -1,19 +1,15 @@
 use crate::presentation::handlers::{
-    api_health::health as api_health,
+    auth::{refresh, sign_in, sign_out, sign_up},
     health::health,
     me::get_me,
     post::{
         create_post, delete_post, get_post_by_id, get_post_by_user_id, update_content, update_post,
         update_title,
     },
-    refresh::refresh,
     settings::{
         create_settings, delete_settings, update_first_name, update_last_name, update_settings,
         update_username,
     },
-    sign_in::sign_in,
-    sign_out::sign_out,
-    sign_up::sign_up,
 };
 
 pub fn public_configure(config: &mut actix_web::web::ServiceConfig) {
@@ -29,7 +25,7 @@ pub fn auth_configure(config: &mut actix_web::web::ServiceConfig) {
 
 pub fn api_configure(config: &mut actix_web::web::ServiceConfig) {
     config
-        .service(api_health)
+        .service(health)
         .service(get_me)
         .service(create_post)
         .service(update_post)
