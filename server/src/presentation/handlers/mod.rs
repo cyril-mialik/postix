@@ -3,6 +3,7 @@ pub mod health;
 pub mod me;
 pub mod post;
 pub mod refresh;
+pub mod settings;
 pub mod sign_in;
 pub mod sign_out;
 pub mod sign_up;

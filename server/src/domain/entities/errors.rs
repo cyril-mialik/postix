@@ -1,4 +1,6 @@
-use crate::domain::entities::{auth::AuthError, post::PostError, user::UserError};
+use crate::domain::entities::{
+    auth::AuthError, post::PostError, settings::SettingsError, user::UserError,
+};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -29,4 +31,7 @@ pub enum Error {
 
     #[error(transparent)]
     Post(#[from] PostError),
+
+    #[error(transparent)]
+    Settings(#[from] SettingsError),
 }

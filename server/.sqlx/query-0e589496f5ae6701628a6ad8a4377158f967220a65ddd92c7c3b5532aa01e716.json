@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            INSERT INTO posts (id, title, content, created_at, updated_at)\n            VALUES ($1, $2, $3, $4, $5)\n            ON CONFLICT (id) DO NOTHING\n            RETURNING id, title, content, created_at, updated_at\n            ",
+  "query": "\n            UPDATE posts\n            SET title = $2, content = $3, updated_at = $4\n            WHERE id = $1\n            RETURNING id, user_id, title, content, created_at, updated_at\n            ",
   "describe": {
     "columns": [
       {
@@ -10,21 +10,26 @@
       },
       {
         "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
         "name": "title",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 2,
+        "ordinal": 3,
         "name": "content",
         "type_info": "Text"
       },
       {
-        "ordinal": 3,
+        "ordinal": 4,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "updated_at",
         "type_info": "Timestamptz"
       }
@@ -34,7 +39,6 @@
         "Uuid",
         "Varchar",
         "Text",
-        "Timestamptz",
         "Timestamptz"
       ]
     },
@@ -43,8 +47,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "8b924f737eff99065e0fa3ce2a1ddfd17731bc8739dfc8f0093a0eb2adfc312f"
+  "hash": "0e589496f5ae6701628a6ad8a4377158f967220a65ddd92c7c3b5532aa01e716"
 }

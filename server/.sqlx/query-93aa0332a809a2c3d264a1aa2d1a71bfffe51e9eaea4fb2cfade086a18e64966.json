@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            UPDATE posts\n            SET title = $2, updated_at = $3\n            WHERE id = $1\n            RETURNING id, title, content, created_at, updated_at\n            ",
+  "query": "\n            UPDATE posts\n            SET content = $2, updated_at = $3\n            WHERE id = $1\n            RETURNING id, user_id, title, content, created_at, updated_at\n            ",
   "describe": {
     "columns": [
       {
@@ -10,21 +10,26 @@
       },
       {
         "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
         "name": "title",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 2,
+        "ordinal": 3,
         "name": "content",
         "type_info": "Text"
       },
       {
-        "ordinal": 3,
+        "ordinal": 4,
         "name": "created_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "updated_at",
         "type_info": "Timestamptz"
       }
@@ -32,7 +37,7 @@
     "parameters": {
       "Left": [
         "Uuid",
-        "Varchar",
+        "Text",
         "Timestamptz"
       ]
     },
@@ -41,8 +46,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "ade2923c390659b241d3a8fd0106bd8288d1f2cd7ac3637781c719c6cb22395c"
+  "hash": "93aa0332a809a2c3d264a1aa2d1a71bfffe51e9eaea4fb2cfade086a18e64966"
 }

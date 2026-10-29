@@ -1,4 +1,6 @@
-use crate::domain::entities::{auth::AuthError, errors::Error, post::PostError, user::UserError};
+use crate::domain::entities::{
+    auth::AuthError, errors::Error, post::PostError, settings::SettingsError, user::UserError,
+};
 use actix_web::{HttpResponse, ResponseError, http::StatusCode};
 
 impl ResponseError for Error {
@@ -13,6 +15,11 @@ impl ResponseError for Error {
             Error::Post(PostError::NotFound) => StatusCode::NOT_FOUND,
             Error::Post(PostError::InvalidTitleLength) => StatusCode::BAD_REQUEST,
             Error::Post(PostError::AlreadyExists) => StatusCode::CONFLICT,
+            Error::Settings(SettingsError::AlreadyExists) => StatusCode::CONFLICT,
+            Error::Settings(SettingsError::NotFound) => StatusCode::NOT_FOUND,
+            Error::Settings(SettingsError::InvalidUsernameLength) => StatusCode::BAD_REQUEST,
+            Error::Settings(SettingsError::InvalidFirstNameLength) => StatusCode::BAD_REQUEST,
+            Error::Settings(SettingsError::InvalidLastNameLength) => StatusCode::BAD_REQUEST,
             Error::System(_) => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }

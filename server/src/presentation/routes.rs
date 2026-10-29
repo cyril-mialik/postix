@@ -7,6 +7,10 @@ use crate::presentation::handlers::{
         update_title,
     },
     refresh::refresh,
+    settings::{
+        create_settings, delete_settings, update_first_name, update_last_name, update_settings,
+        update_username,
+    },
     sign_in::sign_in,
     sign_out::sign_out,
     sign_up::sign_up,
@@ -33,5 +37,11 @@ pub fn api_configure(config: &mut actix_web::web::ServiceConfig) {
         .service(update_title)
         .service(get_post_by_id)
         .service(get_post_by_user_id)
-        .service(delete_post);
+        .service(delete_post)
+        .service(create_settings)
+        .service(update_first_name)
+        .service(update_last_name)
+        .service(delete_settings)
+        .service(update_settings)
+        .service(update_username);
 }

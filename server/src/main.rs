@@ -1,13 +1,16 @@
 use std::sync::Arc;
 
 use crate::{
-    application::{auth::AuthService, post::PostService, user::UserService},
+    application::{
+        auth::AuthService, post::PostService, settings::SettingsService, user::UserService,
+    },
     infrastructure::{
         cache::redis::create_redis_pool,
         config::env::Config,
         database::{migrate, postgres::create_postgres_pool},
         repositories::{
-            post::PostgresPostRepository, token::RedisTokenRepository, user::PostgresUserRepository,
+            post::PostgresPostRepository, settings::PostgresSettingsRepository,
+            token::RedisTokenRepository, user::PostgresUserRepository,
         },
     },
     presentation::middleware::auth_middleware::AuthMiddleware,
@@ -37,9 +40,11 @@ async fn main() -> std::io::Result<()> {
     let user_repository = Arc::new(PostgresUserRepository::new(postgres_pool.clone()));
     let token_repository = Arc::new(RedisTokenRepository::new(redis_pool.clone()));
     let post_repository = Arc::new(PostgresPostRepository::new(postgres_pool.clone()));
+    let settings_repository = Arc::new(PostgresSettingsRepository::new(postgres_pool.clone()));
 
     let user_service = Arc::new(UserService::new(user_repository.clone()));
     let post_service = Arc::new(PostService::new(post_repository.clone()));
+    let settings_service = Arc::new(SettingsService::new(settings_repository.clone()));
     let auth_service = Arc::new(AuthService::new(
         user_repository,
         token_repository,
@@ -69,6 +74,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::from(user_service.clone()))
             .app_data(web::Data::from(auth_service.clone()))
             .app_data(web::Data::from(post_service.clone()))
+            .app_data(web::Data::from(settings_service.clone()))
             .configure(presentation::routes::public_configure)
             .service(web::scope("/auth").configure(presentation::routes::auth_configure))
             .service(
