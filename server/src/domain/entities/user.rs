@@ -31,7 +31,7 @@ impl User {
     }
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, PartialEq, Error)]
 pub enum UserError {
     #[error("Пользователь с таким email уже существует")]
     EmailAlreadyExists,
@@ -41,4 +41,26 @@ pub enum UserError {
 
     #[error("Неверный формат email")]
     InvalidEmail,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rstest::rstest;
+
+    #[rstest]
+    fn test_user_new_valid_email() {
+        let user = User::new("example@email.com".to_owned()).unwrap();
+
+        assert_eq!(user.email, "example@email.com");
+    }
+
+    #[rstest]
+    #[case("example", UserError::InvalidEmail)]
+    #[case("", UserError::InvalidEmail)]
+    fn test_user_new_invalid_email(#[case] email: String, #[case] expected_error: UserError) {
+        let user = User::new(email);
+
+        assert_eq!(user.unwrap_err(), expected_error);
+    }
 }

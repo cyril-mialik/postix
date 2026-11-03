@@ -94,7 +94,7 @@ pub struct Post {
     pub id: Uuid,
     pub user_id: Uuid,
 
-    #[validate(length(max = 256))]
+    #[validate(length(min = 3, max = 256))]
     pub title: String,
     pub content: String,
 
@@ -134,4 +134,37 @@ pub enum PostError {
 
     #[error("Неверная длина заголовка")]
     InvalidTitleLength,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rstest::rstest;
+
+    #[rstest]
+    fn test_post_new_valid_title() {
+        let dto = CreatePostDto {
+            user_id: Uuid::new_v4(),
+            title: "title".to_owned(),
+            content: "content".to_owned(),
+        };
+        let post = Post::new(dto).unwrap();
+
+        assert_eq!(post.title, "title");
+        assert_eq!(post.content, "content");
+    }
+
+    #[rstest]
+    #[case("lo".to_owned(), PostError::InvalidTitleLength.to_string())]
+    #[case("lo".repeat(257), PostError::InvalidTitleLength.to_string())]
+    fn test_post_new_invalid_title(#[case] input: String, #[case] expected: String) {
+        let dto = CreatePostDto {
+            user_id: Uuid::new_v4(),
+            title: input,
+            content: "content".to_owned(),
+        };
+        let post = Post::new(dto);
+
+        assert!(post.is_err_and(|x| x.to_string() == expected));
+    }
 }

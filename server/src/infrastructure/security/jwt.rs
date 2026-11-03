@@ -77,9 +77,11 @@ fn verify_token(secret: &str, token: &str, expected_typ: &str, leeway: u64) -> R
         &DecodingKey::from_secret(secret.as_bytes()),
         &validation,
     )?;
+
     if data.claims.typ != expected_typ {
         return Err(anyhow!("wrong token type"));
     }
+
     Ok(Uuid::parse_str(&data.claims.sub)?)
 }
 
@@ -91,6 +93,7 @@ fn generate_token(secret: &str, user_id: Uuid, duration: Duration, typ: &str) ->
         exp: (now + duration).timestamp(),
         typ: typ.to_string(),
     };
+
     Ok(encode(
         &Header::default(),
         &claims,

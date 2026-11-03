@@ -96,7 +96,7 @@ impl Settings {
     }
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, PartialEq, Error)]
 pub enum SettingsError {
     #[error("Настройки для этого пользователя уже существуют")]
     AlreadyExists,
@@ -112,4 +112,112 @@ pub enum SettingsError {
 
     #[error("Неверная длина фамилии (3–128)")]
     InvalidLastNameLength,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rstest::rstest;
+
+    #[rstest]
+    #[case("username", "username")]
+    fn test_settings_new_valid_username(
+        #[case] username: String,
+        #[case] expected_username: String,
+    ) {
+        let settings = Settings::new(CreateSettingsDto {
+            user_id: Uuid::new_v4(),
+            username,
+            first_name: Some("first_name".to_owned()),
+            last_name: Some("last_name".to_owned()),
+        })
+        .unwrap();
+
+        assert_eq!(settings.username, expected_username);
+    }
+
+    #[rstest]
+    #[case("u", SettingsError::InvalidUsernameLength)]
+    #[case("u".repeat(129), SettingsError::InvalidUsernameLength)]
+    fn test_settings_new_invalid_username(
+        #[case] username: String,
+        #[case] expected_error: SettingsError,
+    ) {
+        let settings = Settings::new(CreateSettingsDto {
+            user_id: Uuid::new_v4(),
+            username,
+            first_name: Some("first_name".to_owned()),
+            last_name: Some("last_name".to_owned()),
+        });
+
+        assert_eq!(settings.unwrap_err(), expected_error);
+    }
+
+    #[rstest]
+    #[case("firstname", "firstname")]
+    fn test_settings_new_valid_first_name(
+        #[case] first_name: String,
+        #[case] expected_first_name: String,
+    ) {
+        let settings = Settings::new(CreateSettingsDto {
+            user_id: Uuid::new_v4(),
+            username: "username".to_owned(),
+            first_name: Some(first_name),
+            last_name: Some("last_name".to_owned()),
+        })
+        .unwrap();
+
+        assert_eq!(settings.first_name, Some(expected_first_name));
+    }
+
+    #[rstest]
+    #[case("f", SettingsError::InvalidFirstNameLength)]
+    #[case("f".repeat(129), SettingsError::InvalidFirstNameLength)]
+    fn test_settings_new_invalid_first_name(
+        #[case] first_name: String,
+        #[case] expected_error: SettingsError,
+    ) {
+        let settings = Settings::new(CreateSettingsDto {
+            user_id: Uuid::new_v4(),
+            username: "username".to_owned(),
+            first_name: Some(first_name),
+            last_name: Some("last_name".to_owned()),
+        });
+
+        assert_eq!(settings.unwrap_err(), expected_error);
+    }
+
+    #[rstest]
+    #[case("lastname", "lastname")]
+    fn test_settings_new_valid_last_name(
+        #[case] last_name: String,
+        #[case] expected_last_name: String,
+    ) {
+        let settings = Settings::new(CreateSettingsDto {
+            user_id: Uuid::new_v4(),
+            username: "username".to_owned(),
+            first_name: Some("first_name".to_owned()),
+            last_name: Some(last_name),
+        })
+        .unwrap();
+
+        assert_eq!(settings.last_name, Some(expected_last_name));
+    }
+
+    #[rstest]
+    #[case("l", SettingsError::InvalidLastNameLength)]
+    #[case("l".repeat(129), SettingsError::InvalidLastNameLength)]
+    fn test_settings_new_invalid_last_name(
+        #[case] last_name: String,
+        #[case] expected_error: SettingsError,
+    ) {
+        let settings = Settings::new(CreateSettingsDto {
+            user_id: Uuid::new_v4(),
+            username: "username".to_owned(),
+            first_name: Some("first_name".to_owned()),
+            last_name: Some(last_name),
+        });
+
+        assert_eq!(settings.unwrap_err(), expected_error);
+    }
 }

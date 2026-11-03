@@ -28,3 +28,4 @@ redis = { workspace = true }
 cookie = { workspace = true }
 async-trait = { workspace = true }
 validator = { workspace = true }
+rstest = "0.28.0"
