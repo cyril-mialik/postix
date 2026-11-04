@@ -7,7 +7,7 @@ use crate::domain::entities::post::{
     UpdatePostDto, UpdatePostTitleDto,
 };
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PostRequest {
     pub user_id: Uuid,
     pub title: String,
@@ -24,7 +24,7 @@ impl Into<CreatePostDto> for PostRequest {
     }
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PostResponse {
     pub id: Uuid,
     pub title: String,
@@ -43,7 +43,7 @@ impl From<Post> for PostResponse {
     }
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PostsResponse {
     pub posts: Vec<PostResponse>,
 }
@@ -56,7 +56,7 @@ impl From<Vec<Post>> for PostsResponse {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct QueryPostId {
     pub id: Uuid,
 }
@@ -67,7 +67,7 @@ impl Into<FindPostByIdDto> for QueryPostId {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct QueryPostUserId {
     pub user_id: Uuid,
 }
@@ -80,7 +80,7 @@ impl Into<FindPostByUserIdDto> for QueryPostUserId {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UpdatePostRequest {
     pub id: Uuid,
     pub new_title: String,
@@ -97,7 +97,7 @@ impl Into<UpdatePostDto> for UpdatePostRequest {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UpdatePostTitleRequest {
     pub id: Uuid,
     pub new_title: String,
@@ -112,7 +112,7 @@ impl Into<UpdatePostTitleDto> for UpdatePostTitleRequest {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UpdatePostContentRequest {
     pub id: Uuid,
     pub new_content: String,
@@ -127,7 +127,7 @@ impl Into<UpdatePostContentDto> for UpdatePostContentRequest {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DeletePostRequest {
     pub id: Uuid,
 }

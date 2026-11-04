@@ -3,7 +3,7 @@ use thiserror::Error;
 use uuid::Uuid;
 use validator::Validate;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CreateSettingsDto {
     pub user_id: Uuid,
     pub username: String,
@@ -11,7 +11,7 @@ pub struct CreateSettingsDto {
     pub last_name: Option<String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct UpdateSettingsDto {
     pub user_id: Uuid,
     pub new_username: String,
@@ -19,35 +19,35 @@ pub struct UpdateSettingsDto {
     pub new_last_name: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct UpdateSettingsUsernameDto {
     pub user_id: Uuid,
     pub new_username: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct UpdateSettingsFirstNameDto {
     pub user_id: Uuid,
     pub new_first_name: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct UpdateSettingsLastNameDto {
     pub user_id: Uuid,
     pub new_last_name: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FindSettingsByUserId {
     pub user_id: Uuid,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct FindSettingsByUsernameDto {
     pub username: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct DeleteSettingsDto {
     pub user_id: Uuid,
 }

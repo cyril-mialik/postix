@@ -236,11 +236,14 @@ mod tests {
         let user2 = make_user("dup@example.com");
 
         repo.create_user(&user1, "hash1").await.unwrap();
-        
+
         let result = repo.create_user(&user2, "hash2").await;
-        
+
         // Благодаря ON CONFLICT DO NOTHING, вернется None, и мы получим EmailAlreadyExists
-        assert!(matches!(result, Err(Error::User(UserError::EmailAlreadyExists))));
+        assert!(matches!(
+            result,
+            Err(Error::User(UserError::EmailAlreadyExists))
+        ));
 
         Ok(())
     }
@@ -270,14 +273,20 @@ mod tests {
 
         repo.create_user(&user, password_hash).await.unwrap();
 
-        let found = repo.find_credentials_by_email("creds@example.com").await.unwrap();
+        let found = repo
+            .find_credentials_by_email("creds@example.com")
+            .await
+            .unwrap();
         assert!(found.is_some());
-        
+
         let (found_user, found_hash) = found.unwrap();
         assert_eq!(found_user.id, user.id);
         assert_eq!(found_hash, password_hash);
 
-        let not_found = repo.find_credentials_by_email("no_such@example.com").await.unwrap();
+        let not_found = repo
+            .find_credentials_by_email("no_such@example.com")
+            .await
+            .unwrap();
         assert!(not_found.is_none());
 
         Ok(())
@@ -324,7 +333,7 @@ mod tests {
     #[sqlx::test]
     async fn test_update_email_not_found(pool: PgPool) -> sqlx::Result<()> {
         let repo = PostgresUserRepository::new(pool);
-        
+
         let result = repo.update_email(Uuid::new_v4(), "new@example.com").await;
         assert!(matches!(result, Err(Error::User(UserError::UserNotFound))));
 
@@ -342,8 +351,8 @@ mod tests {
 
         // Пытаемся user2 поменять email на email user1
         let result = repo.update_email(user2.id, "user1@example.com").await;
-        
-        // Ожидаем ошибку (в текущей реализации это SystemError::Database из-за unique_violation, 
+
+        // Ожидаем ошибку (в текущей реализации это SystemError::Database из-за unique_violation,
         // но по логике должно быть EmailAlreadyExists)
         assert!(result.is_err());
 
@@ -367,7 +376,11 @@ mod tests {
         assert_eq!(updated.id, user.id);
         assert!(updated.updated_at > user.updated_at);
 
-        let (_, found_hash) = repo.find_credentials_by_email("pass@example.com").await.unwrap().unwrap();
+        let (_, found_hash) = repo
+            .find_credentials_by_email("pass@example.com")
+            .await
+            .unwrap()
+            .unwrap();
         assert_eq!(found_hash, "new_hash");
 
         Ok(())
@@ -376,7 +389,7 @@ mod tests {
     #[sqlx::test]
     async fn test_update_password_not_found(pool: PgPool) -> sqlx::Result<()> {
         let repo = PostgresUserRepository::new(pool);
-        
+
         let result = repo.update_password(Uuid::new_v4(), "new_hash").await;
         assert!(matches!(result, Err(Error::User(UserError::UserNotFound))));
 
@@ -390,7 +403,9 @@ mod tests {
 
         repo.create_user(&user, "hash").await.unwrap();
 
-        repo.delete_user(user.id).await.expect("Failed to delete user");
+        repo.delete_user(user.id)
+            .await
+            .expect("Failed to delete user");
 
         let found = repo.find_by_id(user.id).await.unwrap();
         assert!(found.is_none());

@@ -7,7 +7,7 @@ use crate::domain::entities::settings::{
     UpdateSettingsUsernameDto,
 };
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SettingsRequest {
     pub user_id: Uuid,
     pub username: String,
@@ -26,7 +26,7 @@ impl Into<CreateSettingsDto> for SettingsRequest {
     }
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SettingsResponse {
     pub user_id: Uuid,
     pub username: String,
@@ -45,7 +45,7 @@ impl From<Settings> for SettingsResponse {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct QuerySettingsId {
     pub user_id: Uuid,
 }
@@ -58,7 +58,7 @@ impl Into<FindSettingsByUserId> for QuerySettingsId {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct QuerySettingsUsername {
     pub username: String,
 }
@@ -71,7 +71,7 @@ impl Into<FindSettingsByUsernameDto> for QuerySettingsUsername {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UpdateSettingsRequest {
     pub user_id: Uuid,
     pub new_username: String,
@@ -90,7 +90,7 @@ impl Into<UpdateSettingsDto> for UpdateSettingsRequest {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UpdateSettingsUsernameRequest {
     pub user_id: Uuid,
     pub new_username: String,
@@ -105,7 +105,7 @@ impl Into<UpdateSettingsUsernameDto> for UpdateSettingsUsernameRequest {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UpdateSettingsFirstNameRequest {
     pub user_id: Uuid,
     pub new_first_name: String,
@@ -120,7 +120,7 @@ impl Into<UpdateSettingsFirstNameDto> for UpdateSettingsFirstNameRequest {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UpdateSettingsLastNameRequest {
     pub user_id: Uuid,
     pub new_last_name: String,
@@ -135,7 +135,7 @@ impl Into<UpdateSettingsLastNameDto> for UpdateSettingsLastNameRequest {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DeleteSettingsRequest {
     pub user_id: Uuid,
 }
