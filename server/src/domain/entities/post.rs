@@ -4,7 +4,7 @@ use thiserror::Error;
 use uuid::Uuid;
 use validator::Validate;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CreatePostDto {
     pub user_id: Uuid,
     pub title: String,
@@ -21,7 +21,7 @@ impl From<Post> for CreatePostDto {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UpdatePostDto {
     pub id: Uuid,
     pub new_title: String,
@@ -38,17 +38,31 @@ impl From<Post> for UpdatePostDto {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FindPostByIdDto {
     pub id: Uuid,
 }
 
-#[derive(Debug, Clone)]
+impl From<Post> for FindPostByIdDto {
+    fn from(post: Post) -> Self {
+        Self { id: post.id }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FindPostByUserIdDto {
     pub user_id: Uuid,
 }
 
-#[derive(Debug, Clone)]
+impl From<Post> for FindPostByUserIdDto {
+    fn from(post: Post) -> Self {
+        Self {
+            user_id: post.user_id,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UpdatePostTitleDto {
     pub id: Uuid,
     pub new_title: String,
@@ -63,7 +77,7 @@ impl From<Post> for UpdatePostTitleDto {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UpdatePostContentDto {
     pub id: Uuid,
     pub new_content: String,
@@ -78,7 +92,7 @@ impl From<Post> for UpdatePostContentDto {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DeletePostDto {
     pub id: Uuid,
 }
@@ -89,7 +103,7 @@ impl From<Post> for DeletePostDto {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Validate)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Validate)]
 pub struct Post {
     pub id: Uuid,
     pub user_id: Uuid,
@@ -116,6 +130,7 @@ impl Post {
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
+
         new_post
             .validate()
             .map_err(|_| PostError::InvalidTitleLength)?;

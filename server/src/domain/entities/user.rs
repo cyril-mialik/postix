@@ -4,7 +4,7 @@ use thiserror::Error;
 use uuid::Uuid;
 use validator::Validate;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Validate)]
+#[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct User {
     pub id: Uuid,
 

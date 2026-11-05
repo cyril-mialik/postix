@@ -2,27 +2,25 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SignUpRequest {
     pub email: String,
     pub password: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UserResponse {
     pub id: Uuid,
     pub email: String,
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-#[allow(dead_code)] // It used actually
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct UpdateEmailRequest {
     pub new_email: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-#[allow(dead_code)] // It used actually
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct UpdatePasswordRequest {
     pub new_password: String,
 }
