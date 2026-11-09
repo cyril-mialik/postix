@@ -19,6 +19,7 @@ pub struct TokenPair {
     pub refresh_token: String,
 }
 
+#[derive(Clone)]
 pub struct AuthService {
     user_repo: Arc<dyn UserRepository>,
     token_repo: Arc<dyn TokenRepository>,
@@ -69,6 +70,7 @@ impl AuthService {
                 crate::domain::entities::user::UserError::EmailAlreadyExists,
             ));
         }
+
         if self
             .user_repo
             .find_by_username(&user.username)

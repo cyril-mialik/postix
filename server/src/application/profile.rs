@@ -11,6 +11,7 @@ use crate::domain::{
     repositories::{follow::FollowRepository, user::UserRepository},
 };
 
+#[derive(Clone)]
 pub struct ProfileService {
     user_repo: Arc<dyn UserRepository>,
     follow_repo: Arc<dyn FollowRepository>,

@@ -11,6 +11,7 @@ use crate::domain::{
     repositories::{report::ReportRepository, token::TokenRepository, user::UserRepository},
 };
 
+#[derive(Clone)]
 pub struct AdminService {
     user_repo: Arc<dyn UserRepository>,
     token_repo: Arc<dyn TokenRepository>,

@@ -6,6 +6,7 @@ use crate::domain::{
     repositories::{bookmark::BookmarkRepository, post::PostRepository},
 };
 
+#[derive(Clone)]
 pub struct BookmarkService {
     bookmark_repo: Arc<dyn BookmarkRepository>,
     post_repo: Arc<dyn PostRepository>,

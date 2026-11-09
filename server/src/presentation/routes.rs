@@ -1,20 +1,24 @@
-use actix_web::web;
+use actix_web::web::{self};
 
-use super::handlers::{auth, post, profile};
+use super::handlers::{auth, health, post, profile};
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(auth::sign_up)
-       .service(auth::sign_in)
-       .service(auth::refresh)
-       .service(auth::sign_out);
+        .service(auth::sign_in)
+        .service(auth::refresh)
+        .service(auth::sign_out);
 }
 
 pub fn api_configure(cfg: &mut web::ServiceConfig) {
     cfg.service(profile::get_me)
-       .service(profile::update_profile)
-       .service(post::create_post)
-       .service(post::get_feed)
-       .service(post::get_post)
-       .service(post::update_post)
-       .service(post::delete_post);
+        .service(profile::update_profile)
+        .service(post::create_post)
+        .service(post::get_feed)
+        .service(post::get_post)
+        .service(post::update_post)
+        .service(post::delete_post);
+}
+
+pub fn health_configure(cfg: &mut web::ServiceConfig) {
+    cfg.service(health::health);
 }

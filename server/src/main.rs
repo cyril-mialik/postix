@@ -31,6 +31,7 @@ use crate::infrastructure::{
         postgres_user::PostgresUserRepository, redis_token::RedisTokenRepository,
     },
 };
+use crate::presentation::routes::configure;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -65,24 +66,20 @@ async fn main() -> std::io::Result<()> {
     let token_repo: Arc<dyn TokenRepository> = Arc::new(RedisTokenRepository::new(cache));
     let post_repo: Arc<dyn PostRepository> = Arc::new(PostgresPostRepository::new(pool.clone()));
 
-    let auth_service = Arc::new(AuthService::new(
+    let auth_service = AuthService::new(
         user_repo.clone(),
         token_repo.clone(),
         cfg.jwt_secret.clone(),
-    ));
-    let profile_service = Arc::new(ProfileService::new(user_repo.clone(), follow_repo.clone()));
-    let post_service = Arc::new(PostService::new(
-        post_repo.clone(),
-        tag_repo.clone(),
-        user_repo.clone(),
-    ));
-    let rating_service = Arc::new(RatingService::new(rating_repo, post_repo.clone()));
-    let review_service = Arc::new(ReviewService::new(review_repo, post_repo.clone()));
-    let follow_service = Arc::new(FollowService::new(follow_repo, user_repo.clone()));
-    let bookmark_service = Arc::new(BookmarkService::new(bookmark_repo, post_repo.clone()));
-    let notification_service = Arc::new(NotificationService::new(notification_repo));
-    let report_service = Arc::new(ReportService::new(report_repo.clone(), post_repo));
-    let admin_service = Arc::new(AdminService::new(user_repo, token_repo, report_repo));
+    );
+    let profile_service = ProfileService::new(user_repo.clone(), follow_repo.clone());
+    let post_service = PostService::new(post_repo.clone(), tag_repo.clone(), user_repo.clone());
+    let rating_service = RatingService::new(rating_repo, post_repo.clone());
+    let review_service = ReviewService::new(review_repo, post_repo.clone());
+    let follow_service = FollowService::new(follow_repo, user_repo.clone());
+    let bookmark_service = BookmarkService::new(bookmark_repo, post_repo.clone());
+    let notification_service = NotificationService::new(notification_repo);
+    let report_service = ReportService::new(report_repo.clone(), post_repo);
+    let admin_service = AdminService::new(user_repo, token_repo, report_repo);
 
     let addr = format!("{}:{}", cfg.host, cfg.port);
     println!("listening on http://{}", addr);
@@ -112,6 +109,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(report_service.clone()))
             .app_data(web::Data::new(admin_service.clone()))
             .app_data(web::Data::new(cfg.clone()))
+            .configure(presentation::routes::health_configure)
             .configure(presentation::routes::configure)
             .service(
                 web::scope("/api")

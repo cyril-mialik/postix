@@ -10,6 +10,7 @@ use crate::domain::{
     repositories::{post::PostRepository, tag::TagRepository, user::UserRepository},
 };
 
+#[derive(Clone)]
 pub struct PostService {
     post_repo: Arc<dyn PostRepository>,
     tag_repo: Arc<dyn TagRepository>,

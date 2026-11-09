@@ -5,6 +5,7 @@ use crate::domain::{
     entities::{errors::Error, follow::Follow, user::{User, UserError}}, repositories::{follow::FollowRepository, user::UserRepository},
 };
 
+#[derive(Clone)]
 pub struct FollowService {
     follow_repo: Arc<dyn FollowRepository>,
     user_repo: Arc<dyn UserRepository>,

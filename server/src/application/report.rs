@@ -11,6 +11,7 @@ use crate::domain::{
     repositories::{post::PostRepository, report::ReportRepository},
 };
 
+#[derive(Clone)]
 pub struct ReportService {
     report_repo: Arc<dyn ReportRepository>,
     post_repo: Arc<dyn PostRepository>,

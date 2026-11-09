@@ -6,6 +6,7 @@ use crate::domain::{
     repositories::notification::NotificationRepository,
 };
 
+#[derive(Clone)]
 pub struct NotificationService {
     repo: Arc<dyn NotificationRepository>,
 }

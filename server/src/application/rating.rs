@@ -10,6 +10,7 @@ use crate::domain::{
     repositories::{post::PostRepository, rating::RatingRepository},
 };
 
+#[derive(Clone)]
 pub struct RatingService {
     rating_repo: Arc<dyn RatingRepository>,
     post_repo: Arc<dyn PostRepository>,
