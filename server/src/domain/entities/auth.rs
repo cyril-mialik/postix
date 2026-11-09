@@ -2,12 +2,15 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum AuthError {
-    #[error("Неверный email или пароль")]
+    #[error("Неверные учётные данные")]
     InvalidCredentials,
 
-    #[error("Токен недействителен или истек")]
+    #[error("Токен недействителен")]
     InvalidToken,
 
     #[error("Токен отозван")]
     TokenRevoked,
+
+    #[error("Пользователь забанен: {0}")]
+    Banned(String),
 }

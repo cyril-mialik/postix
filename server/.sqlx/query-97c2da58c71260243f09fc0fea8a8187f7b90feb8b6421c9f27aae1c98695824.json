@@ -1,0 +1,60 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT id, is_read, recipient_id, actor_id, post_id, notification_type_id, created_at\n            FROM notification\n            WHERE recipient_id = $1\n            ORDER BY created_at DESC\n            LIMIT $2 OFFSET $3\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "is_read",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 2,
+        "name": "recipient_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "actor_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "post_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "notification_type_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "97c2da58c71260243f09fc0fea8a8187f7b90feb8b6421c9f27aae1c98695824"
+}

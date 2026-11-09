@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE post_rating SET rating = $3, updated_at = NOW() WHERE post_id = $1 AND profile_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8f897a5faf6dd53e69cc5904e461404d095b11a1e4fac4aed0ada23cda184386"
+}

@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE profile\n            SET username = lower($2), avatar = $3, first_name = $4, last_name = $5,\n                theme_id = $6, updated_at = $7\n            WHERE auth_id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Varchar",
+        "Varchar",
+        "Varchar",
+        "Int4",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b93accc39b54cbc1ed2dc07625dea76cfaf066339fc5a9c0377a1266beb51efa"
+}

@@ -1,4 +1,11 @@
-pub mod post;
-pub mod settings;
-pub mod token;
 pub mod user;
+pub mod post;
+pub mod rating;
+pub mod review;
+pub mod follow;
+pub mod bookmark;
+pub mod view;
+pub mod notification;
+pub mod report;
+pub mod token;
+pub mod tag;

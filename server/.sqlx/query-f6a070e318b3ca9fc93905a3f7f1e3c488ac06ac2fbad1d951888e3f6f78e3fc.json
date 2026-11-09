@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE post SET reviews_count = reviews_count + $2 WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f6a070e318b3ca9fc93905a3f7f1e3c488ac06ac2fbad1d951888e3f6f78e3fc"
+}

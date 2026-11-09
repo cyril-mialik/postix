@@ -1,0 +1,130 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT a.id, a.email, a.password, a.is_email_verified, a.is_banned,\n                   a.ban_reason, a.banned_at, a.role_id,\n                   p.username, p.avatar, p.first_name, p.last_name,\n                   p.followers_count, p.following_count, p.posts_count,\n                   p.theme_id, p.deleted_at,\n                   a.created_at, a.updated_at\n            FROM auth a\n            JOIN profile p ON p.auth_id = a.id\n            WHERE lower(p.username) = lower($1)\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "email",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "password",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "is_email_verified",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "is_banned",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "ban_reason",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "banned_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "role_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "username",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 9,
+        "name": "avatar",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 10,
+        "name": "first_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 11,
+        "name": "last_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 12,
+        "name": "followers_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 13,
+        "name": "following_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 14,
+        "name": "posts_count",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 15,
+        "name": "theme_id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 16,
+        "name": "deleted_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 17,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 18,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "3184622b82a6c1082cffb9f96499c39c558117bf06f00320e45256b7e301cc0a"
+}

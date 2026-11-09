@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE profile SET following_count = following_count + $2 WHERE auth_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "82bdf96f60a28830d075c211cdf390eaef1532b2cfc51e31c4cd1513ba617bed"
+}

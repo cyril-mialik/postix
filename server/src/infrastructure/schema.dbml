@@ -1,0 +1,335 @@
+Table auth {
+  id uuid [pk]
+  email varchar [not null]
+  password varchar [not null]
+
+  is_email_verified boolean [default: false, not null]
+  is_banned boolean [default: false, not null]
+  ban_reason varchar(512)
+  banned_at timestamptz [default: null]
+
+  role_id int [not null, default: 1]
+
+  created_at timestamptz [default: `now()`, not null]
+  updated_at timestamptz [default: `now()`, not null]
+
+  indexes {
+    `(lower(email))` [unique, name: 'uq_auth_email_lower']
+  }
+}
+
+Table role {
+  id int [pk, increment]
+  name varchar(64) [unique]
+  description text [note: 'Description of the role table']
+
+  checks {
+    `name IN ('user', 'moderator', 'admin')` [name: 'chk_valid_role']
+  }
+}
+
+Table theme {
+  id int [pk, increment]
+  name varchar(16) [unique]
+
+  checks {
+    `name IN ('light', 'dark', 'auto')` [name: 'chk_valid_theme']
+  }
+}
+
+Table verification_type {
+  id int [pk, increment]
+  name varchar(16) [unique]
+
+  checks {
+    `name IN ('premium', 'business', 'famous')` [name: 'chk_valid_verification_type']
+  }
+}
+
+Table profile {
+  id uuid [pk]
+  username varchar(128) [not null]
+  avatar varchar(1000)
+  first_name varchar(128)
+  last_name varchar(128)
+
+  followers_count int [default: 0, not null]
+  following_count int [default: 0, not null]
+  posts_count int [default: 0, not null]
+
+  created_at timestamptz [default: `now()`, not null]
+  updated_at timestamptz [default: `now()`, not null]
+  deleted_at timestamptz [default: null, note: 'NULL in case your profile is active']
+
+  theme_id int [not null, default: 1]
+  auth_id uuid [unique, not null]
+
+  indexes {
+    `(lower(username))` [unique, name: 'uq_profile_username_lower']
+    `(auth_id)` [unique, name: 'uq_profile_auth']
+  }
+}
+
+Table profile_verification_type {
+  profile_id uuid [not null]
+  verification_id int [not null]
+
+  created_at timestamp [default: `now()`]
+
+  indexes {
+    (profile_id, verification_id) [pk]
+    verification_id
+  }
+}
+
+Table tag {
+  id int [pk, increment]
+  name varchar(50) [unique, not null]
+}
+
+Table post {
+  id uuid [pk]
+  title varchar(256) [not null]
+  content jsonb [note: 'AST content for post']
+
+  rating_sum int [default: 0, not null]
+  rating_count int [default: 0, not null]
+  reviews_count int [default: 0, not null]
+  views_count int [default: 0, not null]
+
+  created_at timestamptz [default: `now()`, not null]
+  updated_at timestamptz [default: `now()`, not null]
+
+  deleted_at timestamptz [default: null, note: 'NULL if post does not deleted. Meta only']
+  deleted_by uuid [default: null, note: 'Who deleted it: author or moderator. Meta only']
+
+  profile_id uuid [not null]
+  status_id int [not null, default: 1]
+
+  indexes {
+    profile_id
+    (status_id, created_at) [name: 'idx_post_feed']
+  }
+}
+
+Table post_rating {
+  id int [pk, increment]
+  rating int [not null]
+
+  created_at timestamptz [default: `now()`, not null]
+  updated_at timestamptz [default: `now()`, not null]
+
+  post_id uuid [not null]
+  profile_id uuid [not null]
+
+  checks {
+    `rating >= 1 AND rating <= 5` [name: 'chk_valid_rating']
+  }
+
+  indexes {
+    (post_id, profile_id) [unique]
+    profile_id
+    post_id
+  }
+}
+
+Table post_review {
+  id int [pk, increment]
+  review text [not null]
+
+  created_at timestamptz [default: `now()`, not null]
+  updated_at timestamptz [default: `now()`, not null]
+
+  post_id uuid [not null]
+  profile_id uuid [not null]
+
+  indexes {
+    (post_id, profile_id) [name: 'uq_review_one_per_profile']
+    post_id
+    profile_id
+  }
+}
+
+Table post_media {
+  id uuid [pk]
+  url varchar(1000) [not null]
+  media_type varchar(32) [not null]
+  position int [not null, default: 0]
+
+  created_at timestamp [default: `now()`]
+
+  post_id uuid [not null]
+
+  checks {
+    `media_type IN ('image', 'video')` [name: 'chk_media_type']
+  }
+
+  indexes {
+    post_id
+    (post_id, position) [name: 'idx_post_media_order']
+  }
+}
+
+Table post_view {
+  post_id uuid [not null]
+  viewer_id uuid [not null]
+  viewed_at date [not null]
+
+  indexes {
+    (post_id, viewer_id, viewed_at) [pk]
+  }
+}
+
+Table post_bookmark {
+  profile_id uuid [not null]
+  post_id uuid [not null]
+
+  created_at timestamp [default: `now()`]
+
+  indexes {
+    (profile_id, post_id) [pk]
+    post_id
+  }
+}
+
+Table post_tag {
+  post_id uuid [not null]
+  tag_id int [not null]
+
+  indexes {
+    (post_id, tag_id) [pk]
+    tag_id
+  }
+}
+
+Table post_status {
+  id int [pk, increment]
+  name varchar(32) [unique, not null]
+  description text
+
+  checks {
+    `name IN ('draft', 'published', 'archived', 'deleted')` [name: 'chk_valid_post_status']
+  }
+}
+
+Table follow {
+  follower_id uuid [not null]
+  following_id uuid [not null]
+  created_at timestamp [default: `now()`]
+
+  indexes {
+    (follower_id, following_id) [pk]
+    following_id
+  }
+
+  checks {
+    `follower_id != following_id` [name: 'chk_no_self_follow']
+  }
+}
+
+Table notification {
+  id uuid [pk]
+  is_read boolean [default: false, not null]
+  recipient_id uuid [not null]
+  actor_id uuid [default: null]
+  post_id uuid
+  notification_type_id int [not null, default: 1]
+
+  created_at timestamptz [default: `now()`, not null]
+
+  indexes {
+    recipient_id
+    (recipient_id, is_read)
+    (recipient_id, actor_id, post_id, notification_type_id) [unique, name: 'uq_notification_dedupe']
+  }
+}
+
+Table notification_type {
+  id int [pk, increment]
+  name varchar(64) [unique, not null]
+  description text
+
+  checks {
+    `name IN ('review', 'rating', 'follow', 'bookmark', 'system')` [name: 'chk_valid_notification_type']
+  }
+}
+
+Table report {
+  id uuid [pk]
+
+  reason varchar(32) [not null]
+  message varchar(1000)
+
+  created_at timestamptz [default: `now()`, not null]
+  resolved_at timestamptz [default: null, note: 'NULL if report does not covered']
+  resolved_by uuid [default: null]
+
+  reporter_id uuid [not null]
+  post_id uuid [not null]
+  status_id int [not null, default: 1]
+
+  indexes {
+    (reporter_id, post_id) [unique, name: 'uq_report_one_per_post']
+    (status_id, created_at) [name: 'idx_report_queue']
+  }
+
+  checks {
+    `reason IN ('spam', 'abuse', 'nsfw', 'violence', 'copyright', 'other')` [name: 'chk_valid_report_reason']
+  }
+}
+
+Table report_status {
+  id int [pk, increment]
+  name varchar(20) [unique, not null]
+  description text
+
+  checks {
+    `name IN ('pending', 'resolved_dismissed', 'resolved_actioned')` [name: 'chk_valid_report_status']
+  }
+}
+
+Ref role_auth: role.id < auth.role_id [update: cascade]
+
+Ref auth_profile: auth.id - profile.auth_id [delete: cascade, update: cascade]
+Ref theme_profile: theme.id < profile.theme_id [update: cascade]
+
+Ref profile_post: profile.id < post.profile_id [delete: cascade, update: cascade]
+
+Ref profile_profile_verification_type: profile.id < profile_verification_type.profile_id [delete: cascade, update: cascade]
+
+Ref verification_type_profile_verification_type: verification_type.id < profile_verification_type.verification_id [delete: cascade, update: cascade]
+
+Ref post_post_rating: post.id < post_rating.post_id [delete: cascade, update: cascade]
+Ref profile_post_rating: profile.id < post_rating.profile_id [delete: cascade, update: cascade]
+
+Ref post_post_review: post.id < post_review.post_id [delete: cascade, update: cascade]
+Ref profile_post_review: profile.id < post_review.profile_id [delete: cascade, update: cascade]
+
+Ref post_view_post: post.id < post_view.post_id [delete: cascade]
+Ref post_view_viewer: profile.id < post_view.viewer_id [delete: cascade]
+
+Ref post_tag_post: post.id < post_tag.post_id [delete: cascade]
+Ref post_tag_tag: tag.id < post_tag.tag_id [delete: cascade]
+
+Ref bookmark_profile: profile.id < post_bookmark.profile_id [delete: cascade]
+Ref bookmark_post: post.id < post_bookmark.post_id [delete: cascade]
+
+Ref follow_follower: follow.follower_id > profile.id [delete: cascade, update: cascade]
+Ref follow_following: follow.following_id > profile.id [delete: cascade, update: cascade]
+
+Ref post_media_post: post.id < post_media.post_id [delete: cascade, update: cascade]
+
+Ref post_status_ref: post_status.id < post.status_id [update: cascade]
+
+Ref notification_type_ref: notification_type.id < notification.notification_type_id [update: cascade]
+Ref notification_recipient: profile.id < notification.recipient_id [delete: cascade]
+Ref notification_actor: notification.actor_id >? profile.id [delete: cascade]
+
+Ref notification_post: notification.post_id >? post.id [delete: cascade]
+
+Ref post_deleted_by: profile.id ?< post.deleted_by [delete: set null, update: cascade]
+
+Ref report_reporter: profile.id < report.reporter_id [delete: cascade, update: cascade]
+Ref report_post: post.id < report.post_id [delete: cascade, update: cascade]
+Ref report_status_ref: report_status.id < report.status_id [update: cascade]
+Ref report_resolved_by: profile.id ?< report.resolved_by [delete: set null, update: cascade]

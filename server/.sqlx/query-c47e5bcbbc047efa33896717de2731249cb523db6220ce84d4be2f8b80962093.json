@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE profile SET posts_count = posts_count + $2 WHERE auth_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c47e5bcbbc047efa33896717de2731249cb523db6220ce84d4be2f8b80962093"
+}

@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE auth\n            SET email = lower($2), password = $3, role_id = $4, is_email_verified = $5,\n                is_banned = $6, ban_reason = $7, banned_at = $8, updated_at = $9\n            WHERE id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Varchar",
+        "Int4",
+        "Bool",
+        "Bool",
+        "Varchar",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0f46da1b19df2683acfdc0f231f1947eedbcd31a771bc607e76b4aa0683c5dde"
+}

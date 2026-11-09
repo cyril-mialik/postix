@@ -1,0 +1,53 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, post_id, profile_id, review, created_at, updated_at\n               FROM post_review WHERE post_id = $1 AND profile_id = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "post_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "profile_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "review",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "84a41cbd4482716e25bfd0d7ff82f75ecbb9657018756d18a53528e1efa2511f"
+}
