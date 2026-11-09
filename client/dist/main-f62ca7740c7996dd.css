@@ -1,0 +1,176 @@
+:root {
+    --primary-blue: #0000FF;
+    --bg-color: #E8EBEF; /* Светло-серый (почти белый) */
+    --font-main: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Базовый фон всего приложения — СИНИЙ с БЕЛОЙ сеткой */
+body {
+    background-color: var(--primary-blue);
+    /* Сетка из светло-серых линий */
+    background-image: 
+        linear-gradient(var(--bg-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--bg-color) 1px, transparent 1px);
+    background-size: 50px 50px;
+    background-position: -1px -1px;
+    
+    color: var(--primary-blue);
+    font-family: var(--font-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px;
+}
+
+/* Окно приложения */
+.app-window {
+    /* Внутри окна фон светло-серый */
+    background-color: var(--bg-color);
+    width: 100%;
+    max-width: 1400px;
+    min-height: 850px;
+    border: 2px solid var(--primary-blue);
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    /* Тень, чтобы окно выделялось на фоне */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Верхняя панель (синяя) */
+.window-header {
+    background-color: var(--primary-blue);
+    height: 30px;
+    display: flex;
+    align-items: center;
+    padding-left: 15px;
+    flex-shrink: 0;
+}
+
+.dots {
+    display: flex;
+    gap: 8px;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    background-color: var(--bg-color);
+    border-radius: 50%;
+}
+
+/* Сетка приложения */
+.app-content {
+    display: grid;
+    grid-template-columns: 120px 1fr 120px;
+    grid-template-rows: auto 1fr;
+    flex-grow: 1;
+}
+
+/* Навигация */
+.nav-bar {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    border-bottom: 1px solid var(--primary-blue);
+    background-color: var(--bg-color);
+    z-index: 10;
+}
+
+.nav-links {
+    display: flex;
+    gap: 10px;
+}
+
+.nav-links a {
+    color: var(--primary-blue);
+    text-decoration: none;
+    font-size: 11px;
+    text-transform: uppercase;
+    border: 1px solid var(--primary-blue);
+    padding: 4px 12px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.nav-links a:hover {
+    background-color: var(--primary-blue);
+    color: var(--bg-color);
+}
+
+.logo {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    text-align: center;
+    line-height: 0.9;
+    text-transform: uppercase;
+}
+
+/* Боковые панели (ВНУТРИ окна, синие) */
+.side-panel-left, .side-panel-right {
+    grid-row: 2;
+    background-color: var(--primary-blue);
+}
+.side-panel-left { grid-column: 1; }
+.side-panel-right { grid-column: 3; }
+
+/* Центральная область (ВНУТРИ окна, светло-серая с синей сеткой) */
+.main-area {
+    grid-column: 2;
+    grid-row: 2;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    position: relative;
+    
+    background-color: var(--bg-color);
+    /* Сетка из синих линий на сером фоне */
+    background-image: 
+        linear-gradient(var(--primary-blue) 1px, transparent 1px),
+        linear-gradient(90deg, var(--primary-blue) 1px, transparent 1px);
+    background-size: 50px 50px;
+    background-position: -1px -1px;
+}
+
+/* Карточки */
+.card {
+    background-color: var(--bg-color);
+    border: 1px solid var(--primary-blue);
+    padding: 30px;
+    font-size: 18px;
+    line-height: 1.4;
+    width: 100%;
+    max-width: 800px;
+    z-index: 2;
+}
+
+.card p {
+    margin-bottom: 15px;
+}
+
+.grid-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    width: 100%;
+    max-width: 800px;
+    z-index: 2;
+}
+
+.grid-cards .card {
+    font-size: 13px;
+    padding: 20px;
+}

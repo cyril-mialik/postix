@@ -18,7 +18,10 @@ pub struct ReviewService {
 
 impl ReviewService {
     pub fn new(review_repo: Arc<dyn ReviewRepository>, post_repo: Arc<dyn PostRepository>) -> Self {
-        Self { review_repo, post_repo }
+        Self {
+            review_repo,
+            post_repo,
+        }
     }
 
     pub async fn create_review(

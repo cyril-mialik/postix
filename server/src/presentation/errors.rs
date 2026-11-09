@@ -2,7 +2,15 @@ use actix_web::{HttpResponse, ResponseError, http::StatusCode};
 use serde_json::json;
 
 use crate::domain::entities::{
-    auth::AuthError, errors::{Error, SystemError}, follow::FollowError, notification::NotificationError, post::PostError, rating::RatingError, report::ReportError, review::ReviewError, user::UserError,
+    auth::AuthError,
+    errors::{Error, SystemError},
+    follow::FollowError,
+    notification::NotificationError,
+    post::PostError,
+    rating::RatingError,
+    report::ReportError,
+    review::ReviewError,
+    user::UserError,
 };
 
 impl ResponseError for Error {
