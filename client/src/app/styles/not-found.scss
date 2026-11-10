@@ -1,0 +1,16 @@
+.not-found {
+  display: flex;
+}
+
+.not-found__body {
+  flex: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.not-found__content {
+  display: flex;
+  padding: 5rem;
+  font-size: 1.5rem;
+}

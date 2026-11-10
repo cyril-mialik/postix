@@ -1,0 +1,11 @@
+.meta-menu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--color-main-white);
+  background-color: var(--color-main-blue);
+}
+ 
+.meta-menu__link {
+  color: var(--color-main-white);
+}

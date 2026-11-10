@@ -1,0 +1,13 @@
+.page {
+  flex: auto;
+  position: relative;
+  display: flex;
+  overflow: auto;
+}
+
+.page__container {
+  flex: auto;
+  display: flex;
+  flex-direction: column;
+}
+

@@ -1,0 +1,10 @@
+.head {
+  display: flex;
+}
+
+.head__container {
+  flex: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}

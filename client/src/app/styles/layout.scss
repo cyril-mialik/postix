@@ -1,0 +1,36 @@
+.layout {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 1rem;
+  background-color: var(--color-main-blue);
+  background-image: 
+    linear-gradient(var(--color-main-white) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-main-white) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-position: -1px -1px;
+}
+
+.layout--wrapper {
+  position: relative;
+}
+
+.layout__container {
+  position: relative;
+  flex: auto;
+  display: flex;
+  flex-direction: column;
+  max-width: 1000px;
+  max-height: 800px;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-main-white);
+  background-image: 
+      linear-gradient(var(--color-main-blue) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-main-blue) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-position: -1px -1px;
+  border: 0.25rem solid var(--color-main-white);
+}

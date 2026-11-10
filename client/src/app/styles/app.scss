@@ -1,0 +1,11 @@
+.app {
+  flex: auto;
+  display: flex;
+}
+
+.app__head {
+  flex: 0 0 100px;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-main-white);
+}

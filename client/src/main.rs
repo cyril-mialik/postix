@@ -1,10 +1,11 @@
-mod api;
-mod app;
-mod components;
-mod pages;
-mod types;
+use crate::app::app::App;
 
-use app::App;
+mod app;
+mod entities;
+mod features;
+mod pages;
+mod shared;
+mod widgets;
 
 fn main() {
     yew::Renderer::<App>::new().render();

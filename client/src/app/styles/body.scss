@@ -1,0 +1,13 @@
+.body {
+  flex: auto;
+  position: relative;
+  display: flex;
+  overflow: auto;
+}
+
+.body__container {
+  position: absolute;
+  flex: auto;
+  display: flex;
+  flex-direction: column;
+}
