@@ -1,16 +1,16 @@
 use yew::prelude::*;
 
 use crate::{
-    shared::ui::{body::Body, page::Page},
+    shared::ui::{body::Body, wrapper::Wrapper},
     widgets::head::ui::head::Head,
 };
 
 #[function_component(Home)]
 pub fn home() -> Html {
     html! {
-        <Page classes="app home">
-            <Head classes="app__head home__head" />
-            <Body classes="app__body home__body">{"home"}</Body>
-        </Page>
+        <Wrapper classes="page home">
+            <Head classes="page__head home__head" />
+            <Body classes="page__body home__body">{"home"}</Body>
+        </Wrapper>
     }
 }

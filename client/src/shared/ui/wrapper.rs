@@ -1,7 +1,7 @@
 use yew::prelude::*;
 
 #[derive(Properties, PartialEq)]
-pub struct PageProps {
+pub struct WrapperProps {
     #[prop_or_default]
     pub children: Children,
 
@@ -9,11 +9,11 @@ pub struct PageProps {
     pub classes: Classes,
 }
 
-#[function_component(Page)]
-pub fn page(props: &PageProps) -> Html {
+#[function_component(Wrapper)]
+pub fn wrapper(props: &WrapperProps) -> Html {
     html! {
-        <main class={classes!("page", props.classes.clone())}>
-            <div class="page__container">
+        <main class={classes!("wrapper", props.classes.clone())}>
+            <div class="wrapper__container">
                 { props.children.clone() }
             </div>
         </main>

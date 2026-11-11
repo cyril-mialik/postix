@@ -1,11 +1,16 @@
-.app {
+.page {
   flex: auto;
   display: flex;
 }
 
-.app__head {
+.page__head {
   flex: 0 0 100px;
   display: flex;
   flex-direction: column;
   background-color: var(--color-main-white);
+}
+
+.page__body {
+  display: flex;
+  flex-direction: column;
 }

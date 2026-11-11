@@ -13,6 +13,7 @@ pub fn use_title() -> &str {
         Some(Route::Search) => "search",
         Some(Route::Auth) => "auth",
         Some(Route::NotFound) => "not-found",
+        Some(Route::About) => "about",
         None => unreachable!(),
     }
 }
