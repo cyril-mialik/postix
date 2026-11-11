@@ -39,23 +39,16 @@ impl AuthService {
         }
     }
 
-    pub async fn sign_up(
-        &self,
-        email: String,
-        password: &str,
-        username: String,
-        first_name: Option<String>,
-        last_name: Option<String>,
-    ) -> Result<TokenPair, Error> {
+    pub async fn sign_up(&self, email: String, password: &str) -> Result<TokenPair, Error> {
         let password_hash = hash_password(password)
             .map_err(|e| Error::System(SystemError::PasswordHashFailed(e.to_string())))?;
+
+        let username = self.generate_unique_username().await?;
 
         let dto = crate::domain::entities::user::CreateUserDtoBuilder::default()
             .email(email)
             .password_hash(password_hash)
             .username(username)
-            .first_name(first_name)
-            .last_name(last_name)
             .build()
             .map_err(|e| {
                 Error::User(crate::domain::entities::user::UserError::Validation(
@@ -160,5 +153,15 @@ impl AuthService {
             access_token,
             refresh_token,
         })
+    }
+
+    async fn generate_unique_username(&self) -> Result<String, Error> {
+        loop {
+            let candidate = User::generate_default_username();
+
+            if self.user_repo.find_by_username(&candidate).await?.is_none() {
+                return Ok(candidate);
+            }
+        }
     }
 }

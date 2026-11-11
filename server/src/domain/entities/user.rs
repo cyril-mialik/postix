@@ -49,7 +49,7 @@ impl User {
             ban_reason: None,
             banned_at: None,
             role: Role::User,
-            username: dto.username.trim().to_owned(),
+            username: dto.username,
             avatar: None,
             first_name: dto.first_name.map(|s| s.trim().to_owned()),
             last_name: dto.last_name.map(|s| s.trim().to_owned()),
@@ -76,6 +76,12 @@ impl User {
         Ok(user)
     }
 
+    pub fn generate_default_username() -> String {
+        let short_uuid = &Uuid::new_v4().to_string()[..8];
+
+        format!("user_{}", short_uuid)
+    }
+
     pub fn is_active(&self) -> bool {
         self.deleted_at.is_none() && !self.is_banned
     }
@@ -100,6 +106,7 @@ impl User {
 pub struct CreateUserDto {
     pub email: String,
     pub password_hash: String,
+
     pub username: String,
 
     #[builder(default)]

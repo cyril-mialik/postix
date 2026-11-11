@@ -14,15 +14,7 @@ pub async fn sign_up(
 ) -> Result<HttpResponse, Error> {
     let payload = payload.into_inner();
 
-    let tokens = service
-        .sign_up(
-            payload.email,
-            &payload.password,
-            payload.username,
-            payload.first_name,
-            payload.last_name,
-        )
-        .await?;
+    let tokens = service.sign_up(payload.email, &payload.password).await?;
 
     let cookie = build_refresh_cookie(&tokens.refresh_token);
 
