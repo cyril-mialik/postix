@@ -31,7 +31,6 @@ use crate::infrastructure::{
         postgres_user::PostgresUserRepository, redis_token::RedisTokenRepository,
     },
 };
-use crate::presentation::routes::configure;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -63,7 +62,7 @@ async fn main() -> std::io::Result<()> {
         Arc::new(PostgresNotificationRepository::new(pool.clone()));
     let report_repo: Arc<dyn ReportRepository> =
         Arc::new(PostgresReportRepository::new(pool.clone()));
-    let token_repo: Arc<dyn TokenRepository> = Arc::new(RedisTokenRepository::new(cache));
+    let token_repo: Arc<dyn TokenRepository> = Arc::new(RedisTokenRepository::new(cache.clone()));
     let post_repo: Arc<dyn PostRepository> = Arc::new(PostgresPostRepository::new(pool.clone()));
 
     let auth_service = AuthService::new(
@@ -98,6 +97,9 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(Logger::default())
             .wrap(cors)
+            .app_data(web::Data::new(cfg.clone()))
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::new(cache.clone()))
             .app_data(web::Data::new(auth_service.clone()))
             .app_data(web::Data::new(profile_service.clone()))
             .app_data(web::Data::new(post_service.clone()))
@@ -108,7 +110,6 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(notification_service.clone()))
             .app_data(web::Data::new(report_service.clone()))
             .app_data(web::Data::new(admin_service.clone()))
-            .app_data(web::Data::new(cfg.clone()))
             .configure(presentation::routes::health_configure)
             .configure(presentation::routes::configure)
             .service(

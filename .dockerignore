@@ -1,0 +1,7 @@
+target/
+client/target/
+client/dist/
+.git/
+.env
+server/.env
+*.md
