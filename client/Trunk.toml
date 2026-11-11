@@ -8,9 +8,5 @@ rewrite = "/api/"
 backend = "http://127.0.0.1:8080/api/"
 
 [[proxy]]
-rewrite = "/auth/"
-backend = "http://127.0.0.1:8080/auth/"
-
-[[proxy]]
 rewrite = "/health"
 backend = "http://127.0.0.1:8080/health"

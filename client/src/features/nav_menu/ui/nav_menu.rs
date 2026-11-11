@@ -1,6 +1,7 @@
 use yew::prelude::*;
 
 use crate::{
+    app::routes::Route,
     features::nav_menu::config::nav_menu::NAV_MENU,
     shared::ui::{menu::Menu, menu_link::MenuLink},
 };
@@ -16,9 +17,9 @@ pub fn nav_menu(props: &NavMenuProps) -> Html {
     html! {
         <Menu classes={classes!("nav-menu", props.classes.clone())}>
             {NAV_MENU.into_iter().map(|item| {
-                html! { <MenuLink classes="nav-menu__link" key={item.id} to={item.to}>{
+                html! { <MenuLink<Route> classes="nav-menu__link" key={item.id} to={item.to}>{
                     html! { item.name }
-                }</MenuLink> }
+                }</MenuLink<Route>> }
             }).collect::<Html>()}
         </Menu>
     }

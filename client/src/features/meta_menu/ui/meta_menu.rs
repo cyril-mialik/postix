@@ -22,9 +22,9 @@ pub fn meta_menu(props: &HeadMetaProps) -> Html {
 
     html! {
         <Menu classes={classes!("meta-menu", props.classes.clone())}>
-            <MenuLink classes="meta-menu__link" to={Route::About}>
+            <MenuLink<Route> classes="meta-menu__link" to={Route::About}>
                 { html!(brand) }
-            </MenuLink>
+            </MenuLink<Route>>
         </Menu>
     }
 }

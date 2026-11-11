@@ -2,15 +2,20 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 
 use crate::pages::{
-    about::ui::about::About, auth::{sign_in::ui::sign_in::SignIn, sign_up::ui::sign_up::SignUp}, home::ui::home::Home, not_found::ui::not_found::NotFound, profile::ui::profile::Profile, search::ui::search::Search,
+    about::ui::about::About,
+    auth::{sign_in::ui::sign_in::SignIn, sign_up::ui::sign_up::SignUp},
+    home::ui::home::Home,
+    not_found::ui::not_found::NotFound,
+    profile::ui::profile::Profile,
+    search::ui::search::Search,
 };
 
 #[derive(Clone, Routable, PartialEq)]
 pub enum AuthRoute {
-    #[at("/sign-in")]
+    #[at("/auth/sign-in")]
     SignIn,
 
-    #[at("/sign-up")]
+    #[at("/auth/sign-up")]
     SignUp,
 }
 
@@ -28,7 +33,7 @@ pub enum Route {
     #[at("/profile")]
     Profile,
 
-    #[at("/auth")]
+    #[at("/auth/*")]
     Auth,
 
     #[not_found]
