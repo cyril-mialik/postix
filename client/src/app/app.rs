@@ -3,7 +3,7 @@ use yew_router::prelude::*;
 
 use crate::app::layout::Layout;
 use crate::app::routes::{Route, switch};
-use crate::features::auth::lib::auth::AuthProvider;
+use crate::features::auth::model::auth_context::AuthProvider;
 
 #[function_component(App)]
 pub fn app() -> Html {

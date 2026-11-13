@@ -1,8 +1,11 @@
+use crate::features::auth::lib::storage;
 use yew::prelude::*;
 
 #[derive(Clone, PartialEq)]
 pub struct AuthContext {
     pub token: Option<String>,
+    pub login: Callback<String>,
+    pub logout: Callback<()>,
 }
 
 impl AuthContext {
@@ -18,14 +21,28 @@ pub struct AuthProviderProps {
 
 #[function_component(AuthProvider)]
 pub fn auth_provider(props: &AuthProviderProps) -> Html {
-    let token = use_state(|| {
-        web_sys::window()
-            .and_then(|w| w.local_storage().ok().flatten())
-            .and_then(|s| s.get_item("access_token").ok().flatten())
-    });
+    let token = use_state(|| storage::get_token());
+
+    let login = {
+        let token = token.clone();
+        Callback::from(move |new_token: String| {
+            storage::save_token(&new_token);
+            token.set(Some(new_token));
+        })
+    };
+
+    let logout = {
+        let token = token.clone();
+        Callback::from(move |_| {
+            storage::remove_token();
+            token.set(None);
+        })
+    };
 
     let context = AuthContext {
         token: (*token).clone(),
+        login,
+        logout,
     };
 
     html! {

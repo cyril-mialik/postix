@@ -2,7 +2,7 @@ use yew::prelude::*;
 
 use crate::{
     features::{
-        auth::lib::auth::AuthContext, auth_menu::ui::auth_menu::AuthMenu,
+        auth::model::auth_context::AuthContext, auth_menu::ui::auth_menu::AuthMenu,
         meta_menu::ui::meta_menu::MetaMenu, nav_menu::ui::nav_menu::NavMenu,
     },
     shared::ui::head::Head as SharedHead,
