@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM post_rating WHERE post_id = $1 AND profile_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dfb062f8e6f99ab6b8919537ad41af91feab78dcd7d3c398a66e64997067fca8"
+}

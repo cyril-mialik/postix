@@ -1,0 +1,75 @@
+.about {
+  display: flex;
+}
+
+.about__head {
+  display: flex;
+}
+
+.about__body {
+  flex: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1rem;
+}
+
+.about__content {
+  display: grid;
+  gap: 1rem;
+  width: min(100%, 38rem);
+  padding: clamp(1.5rem, 5vw, 3rem);
+  color: var(--color-main-blue);
+}
+
+.about__eyebrow {
+  color: var(--color-main-blue);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.about__content h1 {
+  font-size: clamp(2.4rem, 7vw, 4rem);
+  line-height: 1.05;
+}
+
+.about__content > p:not(.about__eyebrow) {
+  color: #000;
+  line-height: 1.65;
+}
+
+.about__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.about__primary,
+.about__secondary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.35rem 0.65rem;
+  color: var(--color-main-blue);
+  background: transparent;
+  border: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color 120ms ease;
+}
+
+.about__primary:hover,
+.about__secondary:hover {
+  color: var(--color-main-blue);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.about__primary:focus-visible,
+.about__secondary:focus-visible {
+  outline: 3px solid var(--color-main-blue);
+  outline-offset: 2px;
+}

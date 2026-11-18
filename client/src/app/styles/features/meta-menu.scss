@@ -1,0 +1,38 @@
+.meta-menu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--color-main-blue);
+  border-bottom: 1px solid var(--color-main-white);
+}
+
+.meta-menu__link {
+  min-height: 2rem;
+  margin: 0;
+  padding: 0.35rem 0.65rem;
+  color: var(--color-main-white);
+  background: transparent;
+  border: 0;
+  font-size: 0.9rem;
+}
+
+.meta-menu__link:hover,
+.meta-menu__link.menu-link--active {
+  color: var(--color-main-white);
+  background: var(--color-main-blue);
+}
+
+.meta-menu__link:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.meta-menu__link.menu-link--active:hover {
+  color: var(--color-main-white);
+  background: var(--color-main-blue);
+}
+
+.meta-menu__link:focus-visible {
+  outline: 3px solid var(--color-main-white);
+  outline-offset: 2px;
+}

@@ -1,0 +1,12 @@
+pub mod bookmark;
+pub mod follow;
+pub mod notification;
+pub mod post;
+pub mod rating;
+pub mod report;
+pub mod review;
+pub mod review_reaction;
+pub mod tag;
+pub mod token;
+pub mod user;
+pub mod view;

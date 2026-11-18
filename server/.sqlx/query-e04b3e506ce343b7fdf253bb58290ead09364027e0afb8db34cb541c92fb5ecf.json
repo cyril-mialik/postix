@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE profile SET deleted_at = NOW(), updated_at = NOW() WHERE auth_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e04b3e506ce343b7fdf253bb58290ead09364027e0afb8db34cb541c92fb5ecf"
+}

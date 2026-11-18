@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <title>Postix</title>
+    <link rel="stylesheet" href="/main-6e416f0dc6d93028.css" integrity="sha384-HUFwGtD84g07lV+dRR1yxQmAiQ8MOgasERgUF7+KRVMhk033kwr/8GtJz1N7C/Ht"/>
+<link rel="modulepreload" href="/client-e4c8c7d89e9bcd8d.js" crossorigin="anonymous" integrity="sha384-zD5VjMPB3Tg9RiW+EVGXtFzrYAV7yuolp9zrOTY8xraEqpBnAxepdcJUHgoasupC"><link rel="preload" href="/client-a459e6d388c7c2f5_bg.wasm" crossorigin="anonymous" integrity="sha384-jsj3YtvuB5jphOL7xkDdlL39nSWJVj/PzEYUkyYUsrblZbjVlULsFMXPXqAy6S3B" as="fetch" type="application/wasm"></head>
+<body>
+<script type="module">
+import init, * as bindings from '/client-e4c8c7d89e9bcd8d.js';
+const wasm = await init({ module_or_path: '/client-a459e6d388c7c2f5_bg.wasm' });
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script></body>
+</html>

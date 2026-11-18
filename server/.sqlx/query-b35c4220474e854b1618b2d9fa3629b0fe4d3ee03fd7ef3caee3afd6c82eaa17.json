@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth SET is_banned = false, ban_reason = NULL, banned_at = NULL, updated_at = NOW() WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b35c4220474e854b1618b2d9fa3629b0fe4d3ee03fd7ef3caee3afd6c82eaa17"
+}

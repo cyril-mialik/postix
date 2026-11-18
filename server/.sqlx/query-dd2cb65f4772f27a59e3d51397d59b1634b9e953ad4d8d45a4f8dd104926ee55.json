@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO post_review (post_id, profile_id, review)\n               VALUES ($1, $2, $3) RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "dd2cb65f4772f27a59e3d51397d59b1634b9e953ad4d8d45a4f8dd104926ee55"
+}

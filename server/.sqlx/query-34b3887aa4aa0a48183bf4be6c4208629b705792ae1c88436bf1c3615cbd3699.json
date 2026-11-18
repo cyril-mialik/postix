@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE post SET rating_sum = rating_sum + $2, rating_count = rating_count + $3 WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "34b3887aa4aa0a48183bf4be6c4208629b705792ae1c88436bf1c3615cbd3699"
+}

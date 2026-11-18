@@ -1,0 +1,15 @@
+.nav-menu {
+  display: flex;
+  flex-wrap: wrap;
+  background-color: var(--color-main-white);
+  border-bottom: 1px solid var(--color-main-blue);
+}
+
+.nav-menu__link {
+  flex: auto;
+  display: flex;
+}
+
+.nav-menu__link--primary {
+  font-weight: 800;
+}

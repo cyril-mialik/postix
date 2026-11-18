@@ -1,0 +1,98 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postix}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-postix}
+    ports:
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postix} -d ${POSTGRES_DB:-postix}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}
+    ports:
+      - '127.0.0.1:${REDIS_PORT:-6379}:6379'
+    volumes:
+      - redis_data:/data
+    command: ['sh', '-c', 'exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"']
+    healthcheck:
+      test: ['CMD-SHELL', 'redis-cli -a "$$REDIS_PASSWORD" ping | grep -q PONG']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  server:
+    profiles: ["prod"]
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postix}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-postix}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      HOST: 0.0.0.0
+      PORT: 8080
+      RUST_BACKTRACE: ${RUST_BACKTRACE:-0}
+      RUST_LOG: ${RUST_LOG:-info}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'curl', '--fail', '--silent', 'http://127.0.0.1:8080/api/health']
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    restart: unless-stopped
+
+  pgadmin:
+    profiles: ["dev-tools"]
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?Set PGADMIN_PASSWORD in .env}
+    ports:
+      - '127.0.0.1:${PGADMIN_PORT:-5050}:80'
+    depends_on:
+      - postgres
+
+  nginx:
+    profiles: ["prod"]
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    image: postix-web:${POSTIX_TAG:-local}
+    ports:
+      - '${HTTP_PORT:-80}:80'
+    depends_on:
+      server:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--quiet', '--spider', 'http://127.0.0.1/api/health']
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:

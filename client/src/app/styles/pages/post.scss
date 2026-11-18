@@ -1,0 +1,41 @@
+.post-detail__content-wrapper {
+  display: grid;
+  gap: 1.5rem;
+  width: min(100%, 50rem);
+  margin: 0 auto;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+.post-detail__article {
+  align-content: start;
+  gap: 1.25rem;
+  padding: clamp(1.25rem, 3vw, 1.8rem);
+}
+
+.post-detail__status {
+  padding: 1.25rem;
+}
+
+.post-detail__draft-label {
+  color: #7a4b00;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.post-detail__title {
+  font-size: clamp(2.2rem, 6vw, 4rem);
+}
+
+.post-detail__meta {
+  color: rgb(0 0 255 / 72%);
+  font-size: 0.9rem;
+}
+
+.post-detail__content {
+  color: var(--color-main-blue);
+  font-size: 1.08rem;
+  line-height: 1.85;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

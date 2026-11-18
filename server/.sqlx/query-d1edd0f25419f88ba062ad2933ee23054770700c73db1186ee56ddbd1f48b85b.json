@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE post SET views_count = views_count + 1 WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d1edd0f25419f88ba062ad2933ee23054770700c73db1186ee56ddbd1f48b85b"
+}

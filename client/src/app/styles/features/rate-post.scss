@@ -1,0 +1,35 @@
+.post-rating {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: clamp(1.1rem, 3vw, 1.5rem);
+}
+
+.post-rating__summary {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.post-rating__summary h2 {
+  color: var(--color-main-blue);
+}
+
+.post-rating__options {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.post-rating__button {
+  min-width: 2rem;
+}
+
+.post-rating__error {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 600px) {
+  .post-rating {
+    grid-template-columns: 1fr;
+  }
+}

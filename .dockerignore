@@ -1,0 +1,10 @@
+target/
+**/target/
+client/target/
+client/dist/
+dist/
+.git/
+.env
+.env.*
+server/.env
+*.md

@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT t.id, t.name\n            FROM tag t\n            JOIN post_tag pt ON pt.tag_id = t.id\n            WHERE pt.post_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "0524dc82ab41807c2f785ca4437f4f000bfc5d15206318f101d7182afa6c7669"
+}

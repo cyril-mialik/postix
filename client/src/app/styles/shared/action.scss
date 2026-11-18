@@ -1,0 +1,52 @@
+button,
+.menu-link {
+  --action-color: var(--color-main-blue);
+
+  min-height: 2.5rem;
+  padding: 0.55rem 0.9rem;
+  color: var(--action-color);
+  background: var(--color-main-white);
+  border: 1px solid var(--action-color);
+  border-radius: 0;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 120ms ease, background-color 120ms ease;
+}
+
+.action--green {
+  --action-color: var(--color-main-green);
+}
+
+.action--red {
+  --action-color: var(--color-main-red);
+}
+
+button:hover:not(:disabled),
+.menu-link:hover {
+  color: var(--color-main-white);
+  background: var(--action-color);
+}
+
+button.action--active,
+.menu-link--active {
+  color: var(--color-main-white);
+  background: var(--action-color);
+}
+
+button.action--active:hover:not(:disabled),
+.menu-link--active:hover {
+  color: var(--action-color);
+  background: var(--color-main-white);
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+button:focus-visible,
+.menu-link:focus-visible {
+  outline: 3px solid var(--action-color);
+  outline-offset: 3px;
+}

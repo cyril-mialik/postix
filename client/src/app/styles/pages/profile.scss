@@ -1,0 +1,133 @@
+.profile {
+  display: flex;
+}
+
+.profile__head {
+  display: flex;
+}
+
+.profile__body {
+  display: flex;
+}
+
+.profile__intro {
+  display: grid;
+  gap: 0.65rem;
+  padding: clamp(1.25rem, 3vw, 1.8rem);
+}
+
+.profile__intro h1 {
+  color: var(--color-main-blue);
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  line-height: 1.08;
+}
+
+.profile__intro > p:last-child {
+  line-height: 1.6;
+}
+
+.profile__card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: clamp(1.25rem, 3vw, 1.8rem);
+}
+
+.profile__sign-out {
+  grid-column: 3;
+  grid-row: 1;
+  align-self: start;
+  justify-self: end;
+}
+
+.profile__avatar {
+  display: grid;
+  width: 3.5rem;
+  aspect-ratio: 1;
+  place-items: center;
+  color: #fff;
+  background: var(--color-main-blue);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.profile__identity h2 {
+  color: var(--color-main-blue);
+  font-size: 1.2rem;
+}
+
+.profile__identity p {
+  margin-top: 0.3rem;
+  color: rgb(0 0 255 / 76%);
+  overflow-wrap: anywhere;
+}
+
+.profile__stats {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-main-blue);
+}
+
+.profile__stats div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.profile__stats dt {
+  color: rgb(0 0 255 / 76%);
+  font-size: 0.82rem;
+}
+
+.profile__stats dd {
+  color: var(--color-main-blue);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.profile__stories-empty {
+  padding: 1.25rem;
+  line-height: 1.5;
+}
+
+.profile__stories {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.profile__stories-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+  padding: clamp(1.1rem, 3vw, 1.5rem);
+}
+
+.profile__stories-header h2 {
+  color: var(--color-main-blue);
+}
+
+.profile__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.profile__tab {
+  border-radius: 0;
+}
+
+@media (max-width: 600px) {
+  .profile__stories {
+    gap: 1rem;
+  }
+
+  .profile__stories-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

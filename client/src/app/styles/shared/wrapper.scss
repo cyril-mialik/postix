@@ -1,0 +1,13 @@
+.wrapper {
+  flex: auto;
+  position: relative;
+  display: flex;
+  overflow: auto;
+}
+
+.wrapper__container {
+  flex: auto;
+  display: flex;
+  flex-direction: column;
+}
+

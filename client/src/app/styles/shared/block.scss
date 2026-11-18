@@ -1,0 +1,36 @@
+.block,
+.blueprint-block {
+  color: var(--color-main-blue);
+  background-color: var(--color-main-white);
+  border: 2px solid var(--color-main-blue);
+  box-shadow: 0.35rem 0.35rem 0 var(--color-main-blue);
+  transition: box-shadow 140ms ease;
+}
+
+.block:hover,
+.blueprint-block:hover {
+  box-shadow: 0.5rem 0.5rem 0 var(--color-main-blue);
+}
+
+.blueprint-block--error {
+  color: var(--color-main-red);
+  border-color: var(--color-main-red);
+  box-shadow: 0.35rem 0.35rem 0 var(--color-main-red);
+  padding: 1.1rem;
+}
+
+.blueprint-block--error:hover {
+  box-shadow: 0.5rem 0.5rem 0 var(--color-main-red);
+}
+
+.block {
+  display: flex;
+  padding: 0.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block,
+  .blueprint-block {
+    transition: none;
+  }
+}

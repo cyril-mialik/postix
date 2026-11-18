@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO post_bookmark (profile_id, post_id) VALUES ($1, $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1c84b97665c661a3ed78c1b6c6ccc5f4a9092eee685d525abafe111d318c9402"
+}

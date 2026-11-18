@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO post_view (post_id, viewer_id, viewed_at)\n            VALUES ($1, $2, $3)\n            ON CONFLICT (post_id, viewer_id, viewed_at) DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Date"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9e5a4dd79b6241ed39a40e9972551530f7a34655e03826331587f9ec1d8e1ce3"
+}

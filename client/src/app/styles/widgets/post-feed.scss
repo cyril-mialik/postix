@@ -1,0 +1,15 @@
+.post-feed {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.post-feed__status,
+.post-feed__empty {
+  padding: 1.5rem;
+  color: var(--color-main-blue);
+  line-height: 1.5;
+}
+
+.post-feed__more {
+  justify-self: center;
+}
