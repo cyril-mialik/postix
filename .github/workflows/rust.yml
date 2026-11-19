@@ -9,24 +9,42 @@ on:
 env:
   CARGO_TERM_COLOR: always
   SQLX_OFFLINE: true
+  TRUNK_VERSION: "0.22.2"
+  TRUNK_SHA256: "26fca8a9952e46cd7d8b8b9a2e2c1786c090fc14b8e10b6678ab4d0f9f1a385f"
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Setup Rust
       uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown
 
-    - name: Install Trunk
-      run: cargo install trunk
+    - name: Cache Rust build artifacts
+      uses: Swatinem/rust-cache@v2
+      with:
+        key: trunk-${{ env.TRUNK_VERSION }}
 
-    - name: Check Server
-      run: cargo check --verbose
+    - name: Install Trunk
+      run: |
+        if trunk --version 2>/dev/null | grep -Fq "trunk ${TRUNK_VERSION}"; then
+          echo "Trunk ${TRUNK_VERSION} restored from cache"
+          exit 0
+        fi
+
+        archive="${RUNNER_TEMP}/trunk.tar.gz"
+        curl --fail --location --retry 3 --silent --show-error \
+          "https://github.com/trunk-rs/trunk/releases/download/v${TRUNK_VERSION}/trunk-x86_64-unknown-linux-gnu.tar.gz" \
+          --output "${archive}"
+        echo "${TRUNK_SHA256}  ${archive}" | sha256sum --check
+        mkdir -p "${HOME}/.cargo/bin"
+        tar --extract --gzip --file "${archive}" --directory "${HOME}/.cargo/bin"
+        chmod +x "${HOME}/.cargo/bin/trunk"
+        trunk --version
       
     - name: Clippy
       run: cargo clippy --verbose
