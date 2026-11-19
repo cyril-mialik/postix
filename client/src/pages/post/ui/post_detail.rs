@@ -1,9 +1,12 @@
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
+use postix_core::{post::PostResponse, user::UserResponse};
+
 use crate::{
     entities::post::{content_text, post_api},
-    features::{auth::AuthContext, rate_post::PostRating},
+    entities::user::user_api,
+    features::{auth::AuthContext, edit_post::EditPostForm, rate_post::PostRating},
     shared::{body::Body, wrapper::Wrapper},
     widgets::{head::Head, review_section::ReviewSection},
 };
@@ -16,20 +19,26 @@ pub struct PostDetailProps {
 #[function_component(PostDetail)]
 pub fn post_detail(props: &PostDetailProps) -> Html {
     let auth = use_context::<AuthContext>().expect("AuthContext not found");
-    let post = use_state(|| None);
+    let post = use_state(|| None::<PostResponse>);
+    let current_user = use_state(|| None::<UserResponse>);
     let error = use_state(|| None::<String>);
     let loading = use_state(|| true);
+    let editing_post = use_state(|| false);
 
     {
         let post = post.clone();
+        let current_user = current_user.clone();
         let error = error.clone();
         let loading = loading.clone();
+        let editing_post = editing_post.clone();
         let auth = auth.clone();
         let id = props.id.clone();
         use_effect_with((auth.is_ready, id.clone()), move |_| {
             post.set(None);
+            current_user.set(None);
             error.set(None);
             loading.set(true);
+            editing_post.set(false);
             if auth.is_ready {
                 spawn_local(async move {
                     let result = auth
@@ -39,7 +48,16 @@ pub fn post_detail(props: &PostDetailProps) -> Html {
                         })
                         .await;
                     match result {
-                        Ok(result) => post.set(Some(result)),
+                        Ok(result) => {
+                            post.set(Some(result));
+                            let profile_result = auth
+                                .with_refresh(|token| async move { user_api::get_me(&token).await })
+                                .await;
+                            match profile_result {
+                                Ok(user) => current_user.set(Some(user)),
+                                Err(message) => error.set(Some(message.to_string())),
+                            }
+                        }
                         Err(message) => error.set(Some(message.to_string())),
                     }
                     loading.set(false);
@@ -50,6 +68,23 @@ pub fn post_detail(props: &PostDetailProps) -> Html {
             || ()
         });
     }
+
+    let on_edit_post = {
+        let editing_post = editing_post.clone();
+        Callback::from(move |_| editing_post.set(true))
+    };
+    let on_cancel_post_edit = {
+        let editing_post = editing_post.clone();
+        Callback::from(move |_| editing_post.set(false))
+    };
+    let on_post_saved = {
+        let post = post.clone();
+        let editing_post = editing_post.clone();
+        Callback::from(move |updated: PostResponse| {
+            post.set(Some(updated));
+            editing_post.set(false);
+        })
+    };
 
     html! {
         <Wrapper classes="page post-detail">
@@ -63,23 +98,38 @@ pub fn post_detail(props: &PostDetailProps) -> Html {
                 }
                 if let Some(post) = &*post {
                     <div class="post-detail__content-wrapper">
-                        <article class="post-detail__article blueprint-block">
-                            <p class="post-detail__eyebrow">{"STORY"}</p>
-                            if post.status == "draft" {
-                                <p class="post-detail__draft-label">{"DRAFT · ONLY YOU CAN SEE THIS STORY"}</p>
-                            }
-                            <h1 class="post-detail__title">{post.title.clone()}</h1>
-                            <p class="post-detail__meta">
-                                {format!("By @{} · {}", &post.author_id.to_string()[..8], post.created_at.format("%b %d, %Y"))}
-                            </p>
-                            <div class="post-detail__content">{content_text(post)}</div>
-                            <div class="post-detail__tags">
-                                {for post.tags.iter().map(|tag| html! {
-                                    <span class="post-card__tag" key={tag.id.to_string()}>{format!("#{}", tag.name)}</span>
-                                })}
-                            </div>
-                        </article>
-                        if post.status == "published" {
+                        if *editing_post {
+                            <EditPostForm
+                                post={post.clone()}
+                                on_saved={on_post_saved.clone()}
+                                on_cancel={on_cancel_post_edit.clone()}
+                            />
+                        } else {
+                            <article class="post-detail__article blueprint-block">
+                                <p class="post-detail__eyebrow">{"STORY"}</p>
+                                if post.status == "draft" {
+                                    <p class="post-detail__draft-label">{"DRAFT · ONLY YOU CAN SEE THIS STORY"}</p>
+                                }
+                                <div class="post-detail__actions">
+                                    if current_user.as_ref().is_some_and(|user| user.id == post.author_id) {
+                                        <button class="action--blue" type="button" onclick={on_edit_post}>
+                                            {"Edit story"}
+                                        </button>
+                                    }
+                                </div>
+                                <h1 class="post-detail__title">{post.title.clone()}</h1>
+                                <p class="post-detail__meta">
+                                    {format!("By @{} · {}", &post.author_id.to_string()[..8], post.created_at.format("%b %d, %Y"))}
+                                </p>
+                                <div class="post-detail__content">{content_text(post)}</div>
+                                <div class="post-detail__tags">
+                                    {for post.tags.iter().map(|tag| html! {
+                                        <span class="post-card__tag" key={tag.id.to_string()}>{format!("#{}", tag.name)}</span>
+                                    })}
+                                </div>
+                            </article>
+                        }
+                        if !*editing_post && post.status == "published" {
                             <PostRating
                                 post_id={props.id.clone()}
                                 rating_sum={post.rating_sum}

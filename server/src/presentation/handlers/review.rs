@@ -1,4 +1,4 @@
-use actix_web::{HttpResponse, get, post, web};
+use actix_web::{HttpResponse, get, patch, post, web};
 use uuid::Uuid;
 
 use crate::{
@@ -67,6 +67,23 @@ pub async fn create_review(
     let mut response = ReviewResponse::from(review);
     response.is_mine = true;
     Ok(HttpResponse::Created().json(response))
+}
+
+#[patch("/posts/{post_id}/reviews/{review_id}")]
+pub async fn update_review(
+    auth: AuthenticatedUser,
+    service: web::Data<ReviewService>,
+    path: web::Path<(Uuid, i32)>,
+    payload: web::Json<ReviewRequest>,
+) -> Result<HttpResponse, Error> {
+    let (post_id, review_id) = path.into_inner();
+    let review = service
+        .update_review(post_id, review_id, auth.user_id, payload.review.clone())
+        .await?;
+
+    let mut response = ReviewResponse::from(review);
+    response.is_mine = true;
+    Ok(HttpResponse::Ok().json(response))
 }
 
 #[post("/posts/{post_id}/reviews/{review_id}/reaction")]

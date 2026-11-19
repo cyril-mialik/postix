@@ -131,13 +131,20 @@ impl ReviewRepository for PostgresReviewRepository {
     }
 
     async fn update(&self, review: &Review) -> Result<Review, Error> {
-        sqlx::query!(
-            "UPDATE post_review SET review = $3, updated_at = NOW() WHERE post_id = $1 AND profile_id = $2",
-            review.post_id, review.profile_id, review.review
+        let result = sqlx::query(
+            "UPDATE post_review SET review = $4, updated_at = NOW() WHERE id = $1 AND post_id = $2 AND profile_id = $3",
         )
+        .bind(review.id)
+        .bind(review.post_id)
+        .bind(review.profile_id)
+        .bind(&review.review)
         .execute(&self.pool)
         .await
         .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
+
+        if result.rows_affected() == 0 {
+            return Err(Error::Review(ReviewError::NotFound));
+        }
         Ok(review.clone())
     }
 

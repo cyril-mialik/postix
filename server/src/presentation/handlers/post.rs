@@ -90,6 +90,7 @@ pub async fn update_post(
             path.into_inner(),
             payload.title,
             payload.content,
+            payload.tag_names,
         )
         .await?;
 

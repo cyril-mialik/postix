@@ -64,6 +64,9 @@ pub fn review_section(props: &ReviewSectionProps) -> Html {
     let loading = use_state(|| true);
     let saving = use_state(|| false);
     let reaction_review = use_state(|| None::<i32>);
+    let editing_review = use_state(|| None::<i32>);
+    let editing_text = use_state(String::new);
+    let updating_review = use_state(|| None::<i32>);
     let sort = use_state(|| ReviewSort::Newest);
 
     {
@@ -166,6 +169,88 @@ pub fn review_section(props: &ReviewSectionProps) -> Html {
         let reaction_review = reaction_review.clone();
         let reaction_busy = reaction_review.clone();
         let review_id = review.id;
+        let is_editing = *editing_review == Some(review_id);
+        let edit_busy = *updating_review == Some(review_id);
+        let on_start_edit = {
+            let editing_review = editing_review.clone();
+            let editing_text = editing_text.clone();
+            let error = error.clone();
+            let value = review.review.clone();
+            Callback::from(move |_| {
+                error.set(None);
+                editing_text.set(value.clone());
+                editing_review.set(Some(review_id));
+            })
+        };
+        let on_edit_text = {
+            let editing_text = editing_text.clone();
+            Callback::from(move |event: InputEvent| {
+                let input: web_sys::HtmlTextAreaElement = event.target_unchecked_into();
+                editing_text.set(input.value());
+            })
+        };
+        let on_cancel_edit = {
+            let editing_review = editing_review.clone();
+            let editing_text = editing_text.clone();
+            Callback::from(move |_| {
+                editing_review.set(None);
+                editing_text.set(String::new());
+            })
+        };
+        let on_submit_edit = {
+            let auth = auth.clone();
+            let post_id = post_id.clone();
+            let editing_text = editing_text.clone();
+            let editing_review = editing_review.clone();
+            let updating_review = updating_review.clone();
+            let reviews = reviews.clone();
+            let error = error.clone();
+            Callback::from(move |event: SubmitEvent| {
+                event.prevent_default();
+                if *updating_review == Some(review_id) {
+                    return;
+                }
+
+                updating_review.set(Some(review_id));
+                error.set(None);
+                let auth = auth.clone();
+                let post_id = post_id.clone();
+                let value = (*editing_text).clone();
+                let editing_review = editing_review.clone();
+                let editing_text = editing_text.clone();
+                let updating_review = updating_review.clone();
+                let reviews = reviews.clone();
+                let error = error.clone();
+                spawn_local(async move {
+                    let result = auth
+                        .with_refresh(|token| {
+                            let post_id = post_id.clone();
+                            let value = value.clone();
+                            async move {
+                                review_api::update_review(&token, &post_id, review_id, &value)
+                                    .await
+                            }
+                        })
+                        .await;
+                    match result {
+                        Ok(updated_review) => {
+                            let mut updated = (*reviews).clone();
+                            if let Some(item) =
+                                updated.iter_mut().find(|item| item.id == review_id)
+                            {
+                                item.review = updated_review.review;
+                                item.updated_at = updated_review.updated_at;
+                            }
+                            reviews.set(updated);
+                            editing_review.set(None);
+                            editing_text.set(String::new());
+                        }
+                        Err(message) => error.set(Some(message.to_string())),
+                    }
+                    updating_review.set(None);
+                });
+            })
+        };
         let on_react = Callback::from(move |reaction: ReviewReaction| {
             if *reaction_review == Some(review_id) {
                 return;
@@ -215,7 +300,42 @@ pub fn review_section(props: &ReviewSectionProps) -> Html {
                         {review.created_at.format("%b %d, %Y").to_string()}
                     </time>
                 </div>
-                <p class="review-section__comment-text">{review.review}</p>
+                if is_editing {
+                    <form class="review-section__edit-form" onsubmit={on_submit_edit}>
+                        <textarea
+                            aria-label="Edit your comment"
+                            value={(*editing_text).clone()}
+                            maxlength="5000"
+                            rows="4"
+                            required=true
+                            disabled={edit_busy}
+                            oninput={on_edit_text}
+                        />
+                        <div class="review-section__comment-actions">
+                            <button
+                                type="button"
+                                disabled={edit_busy}
+                                onclick={on_cancel_edit}
+                            >
+                                {"Cancel"}
+                            </button>
+                            <button class="action--green" type="submit" disabled={edit_busy}>
+                                {if edit_busy { "Saving..." } else { "Save comment" }}
+                            </button>
+                        </div>
+                    </form>
+                } else {
+                    <p class="review-section__comment-text">{review.review}</p>
+                    if review.is_mine {
+                        <button
+                            class="review-section__edit-button"
+                            type="button"
+                            onclick={on_start_edit}
+                        >
+                            {"Edit comment"}
+                        </button>
+                    }
+                }
                 <div class="review-section__reactions">
                     <span>{format!("{} agree · {} disagree", review.agree_count, review.disagree_count)}</span>
                     <div

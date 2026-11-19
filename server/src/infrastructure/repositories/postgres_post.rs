@@ -256,13 +256,41 @@ impl PostRepository for PostgresPostRepository {
     }
 
     async fn update(&self, post: &Post) -> Result<Post, Error> {
+        let mut tx = self
+            .pool
+            .begin()
+            .await
+            .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
+
         sqlx::query!(
             "UPDATE post SET title = $2, content = $3, status_id = $4, updated_at = NOW() WHERE id = $1",
             post.id, post.title, post.content, post.status.as_id()
         )
-        .execute(&self.pool)
+        .execute(&mut *tx)
         .await
         .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
+
+        sqlx::query("DELETE FROM post_tag WHERE post_id = $1")
+            .bind(post.id)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
+
+        for tag in &post.tags {
+            sqlx::query(
+                "INSERT INTO post_tag (post_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+            )
+            .bind(post.id)
+            .bind(tag.id)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
+        }
+
+        tx.commit()
+            .await
+            .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
+
         Ok(post.clone())
     }
 

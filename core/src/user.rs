@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct UserResponse {
     pub id: Uuid,
     pub email: String,
@@ -20,7 +20,7 @@ pub struct UserResponse {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct UpdateProfileRequest {
     pub username: Option<String>,
     pub first_name: Option<String>,

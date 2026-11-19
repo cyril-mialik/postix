@@ -34,11 +34,17 @@
   padding: clamp(1.25rem, 3vw, 1.8rem);
 }
 
-.profile__sign-out {
+.profile__actions {
+  display: flex;
   grid-column: 3;
   grid-row: 1;
   align-self: start;
   justify-self: end;
+  gap: 0.5rem;
+}
+
+.profile__sign-out {
+  white-space: nowrap;
 }
 
 .profile__avatar {
@@ -50,6 +56,10 @@
   background: var(--color-main-blue);
   font-size: 1.5rem;
   font-weight: 800;
+}
+
+img.profile__avatar {
+  object-fit: cover;
 }
 
 .profile__identity h2 {

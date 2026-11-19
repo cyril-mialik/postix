@@ -33,6 +33,7 @@ impl PostPublicationStatus {
 pub struct UpdatePostRequest {
     pub title: Option<String>,
     pub content: Option<serde_json::Value>,
+    pub tag_names: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

@@ -13,6 +13,10 @@ pub fn reviews_endpoint(post_id: &str) -> String {
     format!("{API_URL}/posts/{post_id}/reviews")
 }
 
+pub fn review_endpoint(post_id: &str, review_id: i32) -> String {
+    format!("{}/posts/{post_id}/reviews/{review_id}", API_URL)
+}
+
 pub fn review_reaction_endpoint(post_id: &str, review_id: i32) -> String {
     format!("{}/posts/{post_id}/reviews/{review_id}/reaction", API_URL)
 }
@@ -57,6 +61,27 @@ pub async fn create_review(
         .await
         .map_err(|error| ApiError::Message(error.to_string()))?;
     ensure_success(response, "Could not add this comment.")
+        .await?
+        .json()
+        .await
+        .map_err(|error| ApiError::Message(error.to_string()))
+}
+
+pub async fn update_review(
+    token: &str,
+    post_id: &str,
+    review_id: i32,
+    review: &str,
+) -> Result<ReviewResponse, ApiError> {
+    let body = build_review_request(review).map_err(ApiError::Message)?;
+    let response = Request::patch(&review_endpoint(post_id, review_id))
+        .header("Authorization", &format!("Bearer {token}"))
+        .json(&body)
+        .map_err(|error| ApiError::Message(error.to_string()))?
+        .send()
+        .await
+        .map_err(|error| ApiError::Message(error.to_string()))?;
+    ensure_success(response, "Could not update this comment.")
         .await?
         .json()
         .await
@@ -122,6 +147,10 @@ mod tests {
         assert_eq!(
             review_reaction_endpoint("post-id", 7),
             "/api/posts/post-id/reviews/7/reaction"
+        );
+        assert_eq!(
+            review_endpoint("post-id", 7),
+            "/api/posts/post-id/reviews/7"
         );
     }
 

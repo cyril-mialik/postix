@@ -16,6 +16,11 @@
   padding: 1.25rem;
 }
 
+.post-detail__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .post-detail__draft-label {
   color: #7a4b00;
   font-size: 0.75rem;

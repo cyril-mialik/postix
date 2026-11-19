@@ -89,20 +89,34 @@ impl ReviewService {
     pub async fn update_review(
         &self,
         post_id: Uuid,
-        profile_id: Uuid,
+        review_id: i32,
+        auth_id: Uuid,
         review: String,
     ) -> Result<Review, Error> {
-        let existing: Option<Review> = self
-            .review_repo
-            .find_by_post_and_profile(post_id, profile_id)
-            .await?;
+        let post = self
+            .post_repo
+            .find_by_id(post_id)
+            .await?
+            .ok_or(Error::Post(PostError::NotFound))?;
+        post.ensure_visible().map_err(Error::Post)?;
 
-        let existing = existing.ok_or(Error::Review(ReviewError::NotFound))?;
+        let profile_id = self
+            .user_repo
+            .find_profile_id_by_auth_id(auth_id)
+            .await?
+            .ok_or(Error::User(UserError::NotFound))?;
 
+        let existing = self.review_repo.find_by_id(review_id).await?;
+
+        let existing = existing
+            .filter(|existing| existing.post_id == post_id && existing.profile_id == profile_id)
+            .ok_or(Error::Review(ReviewError::NotFound))?;
+
+        let validated = Review::new(post_id, profile_id, review)?;
         let updated = Review {
-            review: review.trim().to_owned(),
-            updated_at: chrono::Utc::now(),
-            ..existing
+            id: existing.id,
+            created_at: existing.created_at,
+            ..validated
         };
 
         self.review_repo.update(&updated).await

@@ -1,10 +1,7 @@
 use gloo_net::http::{Request, Response};
-use postix_core::{
-    post::{
-        PostPublicationStatus, PostRatingRequest, PostRatingSummary, PostRequest, PostResponse,
-        PostsResponse,
-    },
-    user::UserResponse,
+use postix_core::post::{
+    PostPublicationStatus, PostRatingRequest, PostRatingSummary, PostRequest, PostResponse,
+    PostsResponse, UpdatePostRequest,
 };
 use serde::Deserialize;
 use serde_json::json;
@@ -31,10 +28,6 @@ pub fn post_endpoint(id: &str) -> String {
 
 pub fn post_rating_endpoint(id: &str) -> String {
     format!("{API_URL}/posts/{id}/rating")
-}
-
-pub fn profile_endpoint() -> String {
-    format!("{API_URL}/me")
 }
 
 pub fn build_post_request(
@@ -74,6 +67,19 @@ pub fn build_post_request(
         content: json!({"text": text}),
         tag_names,
         status,
+    })
+}
+
+pub fn build_update_post_request(
+    title: &str,
+    text: &str,
+    tag_input: &str,
+) -> Result<UpdatePostRequest, String> {
+    let request = build_post_request(title, text, tag_input, PostPublicationStatus::Published)?;
+    Ok(UpdatePostRequest {
+        title: Some(request.title),
+        content: Some(request.content),
+        tag_names: Some(request.tag_names),
     })
 }
 
@@ -180,13 +186,22 @@ pub async fn create_post(
         .map_err(|error| ApiError::Message(error.to_string()))
 }
 
-pub async fn get_me(token: &str) -> Result<UserResponse, ApiError> {
-    let response = Request::get(&profile_endpoint())
+pub async fn update_post(
+    token: &str,
+    id: &str,
+    title: &str,
+    text: &str,
+    tags: &str,
+) -> Result<PostResponse, ApiError> {
+    let body = build_update_post_request(title, text, tags).map_err(ApiError::Message)?;
+    let response = Request::patch(&post_endpoint(id))
         .header("Authorization", &format!("Bearer {token}"))
+        .json(&body)
+        .map_err(|error| ApiError::Message(error.to_string()))?
         .send()
         .await
         .map_err(|error| ApiError::Message(error.to_string()))?;
-    ensure_success(response, "Could not load your profile.")
+    ensure_success(response, "Could not update this post.")
         .await?
         .json()
         .await
@@ -245,7 +260,6 @@ mod tests {
             "/api/posts/7b6ab915-1d04-44f2-b44d-1e84de73a310"
         );
         assert_eq!(post_rating_endpoint("post-id"), "/api/posts/post-id/rating");
-        assert_eq!(profile_endpoint(), "/api/me");
     }
 
     #[test]
@@ -298,6 +312,15 @@ mod tests {
             )
             .is_err()
         );
+    }
+
+    #[test]
+    fn update_post_request_includes_validated_tags_and_content() {
+        let request = build_update_post_request(" A title ", " body ", "Rust, rust").unwrap();
+
+        assert_eq!(request.title.as_deref(), Some("A title"));
+        assert_eq!(request.content, Some(json!({"text": "body"})));
+        assert_eq!(request.tag_names, Some(vec!["rust".to_owned()]));
     }
 
     #[test]

@@ -122,12 +122,17 @@ impl PostService {
         post_id: Uuid,
         title: Option<String>,
         content: Option<serde_json::Value>,
+        tag_names: Option<Vec<String>>,
     ) -> Result<Post, Error> {
         let post = self
             .post_repo
             .find_by_id(post_id)
             .await?
             .ok_or(Error::Post(PostError::NotFound))?;
+
+        if post.deleted_at.is_some() || post.status.is_deleted() {
+            return Err(Error::Post(PostError::NotFound));
+        }
 
         let user = self
             .user_repo
@@ -139,10 +144,34 @@ impl PostService {
 
         let mut updated = post.clone();
         if let Some(title) = title {
-            updated.title = title.trim().to_owned();
+            let title = title.trim();
+            if !(3..=256).contains(&title.chars().count()) {
+                return Err(Error::Post(PostError::InvalidTitleLength));
+            }
+            updated.title = title.to_owned();
         }
         if let Some(content) = content {
             updated.content = content;
+        }
+        if let Some(tag_names) = tag_names {
+            let mut tags = Vec::new();
+            for name in tag_names {
+                let name = name.trim().to_lowercase();
+                if name.is_empty()
+                    || tags
+                        .iter()
+                        .any(|tag: &crate::domain::entities::tag::Tag| tag.name == name)
+                {
+                    continue;
+                }
+                if name.chars().count() > 50 {
+                    return Err(Error::Post(PostError::Validation(
+                        "Tags must be 50 characters or fewer.".to_owned(),
+                    )));
+                }
+                tags.push(self.tag_repo.find_or_create(&name).await?);
+            }
+            updated.tags = tags;
         }
         updated.updated_at = chrono::Utc::now();
 
@@ -271,5 +300,54 @@ mod tests {
             .await;
 
         assert!(matches!(result, Err(Error::Post(PostError::Forbidden))));
+    }
+
+    #[actix_web::test]
+    async fn update_post_changes_title_content_and_tags_for_the_author() {
+        let author_id = Uuid::new_v4();
+        let post = draft(author_id);
+        let post_id = post.id;
+
+        let mut post_repo = MockPostRepository::new();
+        post_repo
+            .expect_find_by_id()
+            .once()
+            .returning(move |_| Ok(Some(post.clone())));
+        post_repo
+            .expect_update()
+            .once()
+            .returning(|post| Ok(post.clone()));
+
+        let mut tag_repo = MockTagRepository::new();
+        tag_repo.expect_find_or_create().once().returning(|name| {
+            Ok(crate::domain::entities::tag::Tag {
+                id: 8,
+                name: name.to_owned(),
+            })
+        });
+
+        let mut user_repo = MockUserRepository::new();
+        let author = user(author_id);
+        user_repo
+            .expect_find_by_id()
+            .once()
+            .returning(move |_| Ok(Some(author.clone())));
+
+        let updated =
+            PostService::new(Arc::new(post_repo), Arc::new(tag_repo), Arc::new(user_repo))
+                .update_post(
+                    author_id,
+                    post_id,
+                    Some(" Updated title ".to_owned()),
+                    Some(serde_json::json!({"text": "Updated body"})),
+                    Some(vec!["Rust".to_owned(), " ".to_owned()]),
+                )
+                .await
+                .unwrap();
+
+        assert_eq!(updated.title, "Updated title");
+        assert_eq!(updated.content, serde_json::json!({"text": "Updated body"}));
+        assert_eq!(updated.tags.len(), 1);
+        assert_eq!(updated.tags[0].name, "rust");
     }
 }

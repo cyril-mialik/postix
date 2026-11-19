@@ -15,6 +15,7 @@ pub fn protected_api_configure(cfg: &mut web::ServiceConfig) {
         .service(profile::update_profile)
         .service(review::get_reviews)
         .service(review::create_review)
+        .service(review::update_review)
         .service(review::react_to_review)
         .service(rating::get_post_rating)
         .service(rating::rate_post)
@@ -32,11 +33,14 @@ mod tests {
 
     use actix_web::{App, http::StatusCode, test, web};
     use postix_core::{
-        post::{PostRatingRequest, PostRatingSummary, PostRequest, PostResponse},
+        post::{
+            PostRatingRequest, PostRatingSummary, PostRequest, PostResponse, UpdatePostRequest,
+        },
         review::{
             ReviewReaction, ReviewReactionRequest, ReviewReactionSummary, ReviewRequest,
             ReviewResponse, ReviewsResponse,
         },
+        user::UpdateProfileRequest,
     };
     use serde_json::json;
     use uuid::Uuid;
@@ -44,8 +48,8 @@ mod tests {
     use super::*;
     use crate::{
         application::{
-            post::PostService, rating::RatingService, review::ReviewService,
-            review_reaction::ReviewReactionService,
+            post::PostService, profile::ProfileService, rating::RatingService,
+            review::ReviewService, review_reaction::ReviewReactionService,
         },
         domain::{
             entities::{
@@ -57,6 +61,7 @@ mod tests {
                     ReviewReactionSummary as DomainReviewReactionSummary,
                 },
                 tag::Tag,
+                user::{CreateUserDtoBuilder, User},
             },
             repositories::{
                 post::MockPostRepository, rating::MockRatingRepository,
@@ -122,6 +127,15 @@ mod tests {
         .await;
         assert_eq!(react_to_review.status(), StatusCode::UNAUTHORIZED);
 
+        let update_review = test::call_service(
+            &app,
+            test::TestRequest::patch()
+                .uri("/api/posts/00000000-0000-0000-0000-000000000001/reviews/1")
+                .to_request(),
+        )
+        .await;
+        assert_eq!(update_review.status(), StatusCode::UNAUTHORIZED);
+
         let my_posts = test::call_service(
             &app,
             test::TestRequest::get().uri("/api/posts/mine").to_request(),
@@ -148,6 +162,64 @@ mod tests {
         )
         .await;
         assert_ne!(api_auth.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[actix_web::test]
+    async fn profile_patch_updates_profile_fields_for_the_authenticated_user() {
+        let user = User::new(
+            CreateUserDtoBuilder::default()
+                .email("reader@example.com")
+                .password_hash("hash")
+                .username("reader")
+                .build()
+                .unwrap(),
+        )
+        .unwrap();
+        let auth_id = user.id;
+        let mut user_repo = MockUserRepository::new();
+        let existing = user.clone();
+        user_repo
+            .expect_find_by_id()
+            .once()
+            .returning(move |_| Ok(Some(existing.clone())));
+        user_repo
+            .expect_update()
+            .once()
+            .returning(|user| Ok(user.clone()));
+        let service = ProfileService::new(Arc::new(user_repo));
+        let secret = "profile-test-secret";
+        let token = generate_access_token(secret, auth_id).unwrap();
+        let app = test::init_service(
+            App::new().app_data(web::Data::new(service)).service(
+                web::scope("/api").service(
+                    web::scope("")
+                        .wrap(JwtAuth::new(secret))
+                        .configure(protected_api_configure),
+                ),
+            ),
+        )
+        .await;
+
+        let response = test::call_service(
+            &app,
+            test::TestRequest::patch()
+                .uri("/api/me")
+                .insert_header(("Authorization", format!("Bearer {token}")))
+                .set_json(UpdateProfileRequest {
+                    username: Some(" newname ".to_owned()),
+                    first_name: Some(" Ada ".to_owned()),
+                    last_name: Some(" ".to_owned()),
+                    avatar: Some(" ".to_owned()),
+                })
+                .to_request(),
+        )
+        .await;
+        assert_eq!(response.status(), StatusCode::OK);
+        let updated: postix_core::user::UserResponse = test::read_body_json(response).await;
+        assert_eq!(updated.username, "newname");
+        assert_eq!(updated.first_name.as_deref(), Some("Ada"));
+        assert_eq!(updated.last_name, None);
+        assert_eq!(updated.avatar, None);
     }
 
     #[actix_web::test]
@@ -230,6 +302,90 @@ mod tests {
         let draft: crate::presentation::dto::post::PostResponse =
             test::read_body_json(response).await;
         assert_eq!(draft.status, "draft");
+    }
+
+    #[actix_web::test]
+    async fn post_patch_updates_the_authors_story_and_tags() {
+        let auth_id = Uuid::new_v4();
+        let post = Post::new(
+            CreatePostDtoBuilder::default()
+                .author_id(auth_id)
+                .title("Original story".to_owned())
+                .content(json!({"text": "Original body"}))
+                .build()
+                .unwrap(),
+        )
+        .unwrap();
+        let post_id = post.id;
+
+        let mut post_repo = MockPostRepository::new();
+        post_repo
+            .expect_find_by_id()
+            .once()
+            .returning(move |_| Ok(Some(post.clone())));
+        post_repo
+            .expect_update()
+            .once()
+            .returning(|post| Ok(post.clone()));
+
+        let mut tag_repo = MockTagRepository::new();
+        tag_repo.expect_find_or_create().once().returning(|name| {
+            Ok(Tag {
+                id: 8,
+                name: name.to_owned(),
+            })
+        });
+
+        let mut user = User::new(
+            CreateUserDtoBuilder::default()
+                .email("author@example.com")
+                .password_hash("hash")
+                .username("author")
+                .build()
+                .unwrap(),
+        )
+        .unwrap();
+        user.id = auth_id;
+        let mut user_repo = MockUserRepository::new();
+        user_repo
+            .expect_find_by_id()
+            .once()
+            .returning(move |_| Ok(Some(user.clone())));
+
+        let service =
+            PostService::new(Arc::new(post_repo), Arc::new(tag_repo), Arc::new(user_repo));
+        let secret = "post-update-test-secret";
+        let token = generate_access_token(secret, auth_id).unwrap();
+        let app = test::init_service(
+            App::new().app_data(web::Data::new(service)).service(
+                web::scope("/api").service(
+                    web::scope("")
+                        .wrap(JwtAuth::new(secret))
+                        .configure(protected_api_configure),
+                ),
+            ),
+        )
+        .await;
+
+        let response = test::call_service(
+            &app,
+            test::TestRequest::patch()
+                .uri(&format!("/api/posts/{post_id}"))
+                .insert_header(("Authorization", format!("Bearer {token}")))
+                .set_json(UpdatePostRequest {
+                    title: Some("Updated story".to_owned()),
+                    content: Some(json!({"text": "Updated body"})),
+                    tag_names: Some(vec!["Rust".to_owned()]),
+                })
+                .to_request(),
+        )
+        .await;
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let updated: PostResponse = test::read_body_json(response).await;
+        assert_eq!(updated.title, "Updated story");
+        assert_eq!(updated.content, json!({"text": "Updated body"}));
+        assert_eq!(updated.tags[0].name, "rust");
     }
 
     #[actix_web::test]
@@ -364,7 +520,7 @@ mod tests {
         let mut post_repo = MockPostRepository::new();
         post_repo
             .expect_find_by_id()
-            .times(3)
+            .times(4)
             .returning(move |_| Ok(Some(post.clone())));
 
         let mut review_repo = MockReviewRepository::new();
@@ -377,11 +533,15 @@ mod tests {
             created.id = 7;
             Ok(created)
         });
-        let review_for_rating = stored_review.clone();
+        let review_for_update = stored_review.clone();
         review_repo
             .expect_find_by_id()
+            .times(2)
+            .returning(move |_| Ok(Some(review_for_update.clone())));
+        review_repo
+            .expect_update()
             .once()
-            .returning(move |_| Ok(Some(review_for_rating.clone())));
+            .returning(|review| Ok(review.clone()));
         let review_for_list = stored_review.clone();
         review_repo
             .expect_find_by_post()
@@ -391,7 +551,7 @@ mod tests {
         let mut user_repo = MockUserRepository::new();
         user_repo
             .expect_find_profile_id_by_auth_id()
-            .times(4)
+            .times(5)
             .returning(move |_| Ok(Some(profile_id)));
 
         let review_repo = Arc::new(review_repo);
@@ -445,6 +605,22 @@ mod tests {
         let created: ReviewResponse = test::read_body_json(response).await;
         assert_eq!(created.id, 7);
         assert!(created.is_mine);
+
+        let response = test::call_service(
+            &app,
+            test::TestRequest::patch()
+                .uri(&format!("/api/posts/{post_id}/reviews/7"))
+                .insert_header(("Authorization", format!("Bearer {token}")))
+                .set_json(ReviewRequest {
+                    review: "An updated comment".to_owned(),
+                })
+                .to_request(),
+        )
+        .await;
+        assert_eq!(response.status(), StatusCode::OK);
+        let updated: ReviewResponse = test::read_body_json(response).await;
+        assert_eq!(updated.review, "An updated comment");
+        assert!(updated.is_mine);
 
         let response = test::call_service(
             &app,

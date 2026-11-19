@@ -54,6 +54,7 @@ Import a slice through its public API at the slice root rather than reaching int
 - The client refreshes the access token on startup and retries a protected request once after `401`. Invalid refresh sessions clear local auth state and redirect to sign-in.
 - Home is the feed. Post creation is a separate page at `/posts/new`; post details use `/posts/:id`.
 - The authenticated profile provides published-post and draft views; drafts and deleted posts are private.
+- Users can edit their profile details, their own posts (including tags), and their own comments.
 - Keep sign-out on the profile page only.
 - The writing form accepts a title, plain-text body, and tags. Authors can publish immediately or save a draft; confirm before committing publish, draft, or sign-out actions.
 - Feed cards link to the full post, and previews show at most the first 150 characters of the body.
