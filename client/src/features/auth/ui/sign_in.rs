@@ -58,8 +58,8 @@ pub fn sign_in_form() -> Html {
     };
 
     html! {
-        <Block classes="auth-form__block">
-            <form class="auth-form sign-in-form" onsubmit={on_submit}>
+        <Block classes="auth-form">
+            <form class="sign-in-form" onsubmit={on_submit}>
                 <header class="auth-form__header">
                     <p class="auth-form__eyebrow">{"Welcome back"}</p>
                     <h1 class="auth-form__title">{"Sign in to Postix"}</h1>

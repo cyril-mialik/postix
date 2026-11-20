@@ -18,12 +18,3 @@ body {
     font-family: var(--font-main);
     font-size: 16px;
 }
-
-.page .block p,
-.page .blueprint-block p {
-    color: var(--color-pure-black);
-}
-
-.page p[class$="__eyebrow"] {
-    color: var(--color-main-blue);
-}

@@ -9,9 +9,9 @@ use crate::{
 #[function_component(SignUp)]
 pub fn sign_up() -> Html {
     html! {
-        <Wrapper classes="page sign-up">
-            <Head classes="page__head sign-up__head" />
-            <Body classes="page__body sign-up__body">
+        <Wrapper classes="page">
+            <Head classes="page__head" />
+            <Body classes="page__body">
                 <SignUpForm />
             </Body>
         </Wrapper>

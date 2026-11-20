@@ -10,8 +10,8 @@ use crate::{
 pub fn sign_in() -> Html {
     html! {
         <Wrapper classes="page sign-in">
-            <Head classes="page__head sign-in__head" />
-            <Body classes="page__body sign-in__body">
+            <Head classes="page__head" />
+            <Body classes="page__body">
                 <SignInForm />
             </Body>
         </Wrapper>

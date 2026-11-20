@@ -1,10 +1,20 @@
 :root {
+  --page-padding: clamp(1.25rem, 4vw, 2.5rem);
+  --page-gap: 1.25rem;
+  --block-padding: clamp(1.25rem, 3vw, 1.8rem);
+  --color-blue: #0000FF;
+  --color-green: #008000;
+  --color-red: #CC0000;
+  --color-white: #E8EBEF;
+  --color-black: #000;
+
   --color-main-blue: #0000FF;
   --color-main-green: #008000;
   --color-main-red: #CC0000;
   --color-main-white: #E8EBEF;
   --color-pure-black: #000;
   --color-pure-white: #fff;
+
   --color-blue-12: rgb(0 0 255 / 12%);
   --color-blue-24: rgb(0 0 255 / 24%);
   --color-blue-30: rgb(0 0 255 / 30%);

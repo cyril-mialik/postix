@@ -58,8 +58,8 @@ pub fn sign_up_form() -> Html {
     };
 
     html! {
-        <Block classes="auth-form__block">
-            <form class="auth-form sign-up-form" onsubmit={on_submit}>
+        <Block classes="auth-form">
+            <form class="sign-up-form" onsubmit={on_submit}>
                 <header class="auth-form__header">
                     <p class="auth-form__eyebrow">{"Join the conversation"}</p>
                     <h1 class="auth-form__title">{"Create your account"}</h1>

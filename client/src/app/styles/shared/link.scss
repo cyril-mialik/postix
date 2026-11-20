@@ -1,0 +1,18 @@
+.link {
+  display: inline-flex;
+  color: var(--color-blue);
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.link:hover {
+  color: var(--color-blue);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.link:focus-visible {
+  outline: 3px solid var(--color-blue);
+  outline-offset: 2px;
+}

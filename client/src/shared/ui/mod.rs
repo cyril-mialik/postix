@@ -8,3 +8,4 @@ pub mod intro;
 pub mod menu;
 pub mod menu_link;
 pub mod wrapper;
+pub mod link;

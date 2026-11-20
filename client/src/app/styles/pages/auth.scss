@@ -1,3 +1,7 @@
+.auth-form {
+  margin: 0 auto;
+}
+
 .sign-in__body,
 .sign-up__body {
   flex: 1 1 auto;
@@ -19,13 +23,6 @@
 .auth-form__block {
   width: min(100%, 28rem);
   padding: var(--space-auth-card);
-}
-
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-9);
-  width: 100%;
 }
 
 .auth-form__header {

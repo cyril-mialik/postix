@@ -7,10 +7,14 @@
   flex: 0 0 100px;
   display: flex;
   flex-direction: column;
-  background-color: var(--color-main-white);
+  background-color: var(--color-white);
 }
 
 .page__body {
+  flex: auto;
   display: flex;
-  flex-direction: column;
+  gap: var(--page-gap);
+  width: min(100%, 50rem);
+  margin: 0 auto;
+  padding: var(--page-padding);
 }

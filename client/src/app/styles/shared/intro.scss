@@ -2,34 +2,33 @@
   display: grid;
   justify-items: flex-start;
   gap: var(--space-5);
-  width: 100%;
-  padding: var(--space-block);
-  text-align: center;
 }
 
 .intro__subtitle {
-  color: var(--color-main-blue);
+  color: var(--color-blue);
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  line-height: 1.08;
+  user-select: none;
+}
+
+.intro__title {
+  color: var(--color-blue);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-}
-
-.intro h1 {
-  color: var(--color-main-blue);
-  font-size: clamp(2rem, 5vw, 3.2rem);
-  line-height: 1.08;
+  user-select: none;
 }
 
 .intro__description {
-  color: var(--color-pure-black);
+  color: var(--color-black);
   line-height: 1.6;
+  user-select: none;
 }
 
 .intro__actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   gap: var(--space-6);
-  margin-top: var(--space-4);
 }
