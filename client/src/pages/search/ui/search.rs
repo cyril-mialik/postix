@@ -4,6 +4,7 @@ use crate::{
     shared::{
         body::Body,
         input::{Input, InputType},
+        intro::Intro,
         wrapper::Wrapper,
     },
     widgets::{head::Head, post_feed::PostFeed},
@@ -22,11 +23,11 @@ pub fn search() -> Html {
             <Head classes="page__head search__head" />
             <Body classes="page__body search__body">
                 <div class="search__content">
-                    <header class="search__intro blueprint-block">
-                        <p class="search__eyebrow">{"DISCOVER"}</p>
-                        <h1>{"Find a story"}</h1>
-                        <p>{"Search recent stories by title, text, or tag."}</p>
-                    </header>
+                    <Intro
+                        subtitle="DISCOVER"
+                        title="Find a story"
+                        description="Search recent stories by title, text, or tag."
+                    />
                     <Input
                         id="story-search"
                         name="q"

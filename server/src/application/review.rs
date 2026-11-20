@@ -122,8 +122,35 @@ impl ReviewService {
         self.review_repo.update(&updated).await
     }
 
-    pub async fn delete_review(&self, post_id: Uuid, profile_id: Uuid) -> Result<(), Error> {
-        self.review_repo.delete(post_id, profile_id).await?;
+    pub async fn delete_review(
+        &self,
+        post_id: Uuid,
+        review_id: i32,
+        auth_id: Uuid,
+    ) -> Result<(), Error> {
+        let post = self
+            .post_repo
+            .find_by_id(post_id)
+            .await?
+            .ok_or(Error::Post(PostError::NotFound))?;
+        post.ensure_visible().map_err(Error::Post)?;
+
+        let profile_id = self
+            .user_repo
+            .find_profile_id_by_auth_id(auth_id)
+            .await?
+            .ok_or(Error::User(UserError::NotFound))?;
+
+        let existing = self
+            .review_repo
+            .find_by_id(review_id)
+            .await?
+            .filter(|review| review.post_id == post_id && review.profile_id == profile_id)
+            .ok_or(Error::Review(ReviewError::NotFound))?;
+
+        self.review_repo
+            .delete(existing.post_id, existing.profile_id)
+            .await?;
         Ok(())
     }
 }

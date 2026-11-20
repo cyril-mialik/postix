@@ -1,0 +1,35 @@
+.intro {
+  display: grid;
+  justify-items: flex-start;
+  gap: var(--space-5);
+  width: 100%;
+  padding: var(--space-block);
+  text-align: center;
+}
+
+.intro__subtitle {
+  color: var(--color-main-blue);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.intro h1 {
+  color: var(--color-main-blue);
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  line-height: 1.08;
+}
+
+.intro__description {
+  color: var(--color-pure-black);
+  line-height: 1.6;
+}
+
+.intro__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-6);
+  margin-top: var(--space-4);
+}

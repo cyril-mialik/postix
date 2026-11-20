@@ -3,7 +3,10 @@ use yew::prelude::*;
 
 use postix_core::review::{ReviewReaction, ReviewResponse};
 
-use crate::{entities::review::review_api, features::auth::AuthContext};
+use crate::{
+    entities::review::review_api, features::auth::AuthContext,
+    shared::confirm_dialog::ConfirmDialog,
+};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum ReviewSort {
@@ -67,6 +70,8 @@ pub fn review_section(props: &ReviewSectionProps) -> Html {
     let editing_review = use_state(|| None::<i32>);
     let editing_text = use_state(String::new);
     let updating_review = use_state(|| None::<i32>);
+    let confirming_review = use_state(|| None::<i32>);
+    let deleting_review = use_state(|| None::<i32>);
     let sort = use_state(|| ReviewSort::Newest);
 
     {
@@ -171,6 +176,10 @@ pub fn review_section(props: &ReviewSectionProps) -> Html {
         let review_id = review.id;
         let is_editing = *editing_review == Some(review_id);
         let edit_busy = *updating_review == Some(review_id);
+        let on_open_delete = {
+            let confirming_review = confirming_review.clone();
+            Callback::from(move |_| confirming_review.set(Some(review_id)))
+        };
         let on_start_edit = {
             let editing_review = editing_review.clone();
             let editing_text = editing_text.clone();
@@ -327,13 +336,22 @@ pub fn review_section(props: &ReviewSectionProps) -> Html {
                 } else {
                     <p class="review-section__comment-text">{review.review}</p>
                     if review.is_mine {
-                        <button
-                            class="review-section__edit-button"
-                            type="button"
-                            onclick={on_start_edit}
-                        >
-                            {"Edit comment"}
-                        </button>
+                        <div class="review-section__comment-actions">
+                            <button
+                                class="review-section__edit-button"
+                                type="button"
+                                onclick={on_start_edit}
+                            >
+                                {"Edit comment"}
+                            </button>
+                            <button
+                                class="review-section__delete-button"
+                                type="button"
+                                onclick={on_open_delete}
+                            >
+                                {"Delete comment"}
+                            </button>
+                        </div>
                     }
                 }
                 <div class="review-section__reactions">
@@ -377,6 +395,55 @@ pub fn review_section(props: &ReviewSectionProps) -> Html {
         .iter()
         .find(|review| review.is_mine)
         .map(|review| review.id);
+    let on_cancel_review_delete = {
+        let confirming_review = confirming_review.clone();
+        Callback::from(move |_| confirming_review.set(None))
+    };
+    let on_confirm_review_delete = {
+        let auth = auth.clone();
+        let post_id = props.post_id.clone();
+        let confirming_review = confirming_review.clone();
+        let deleting_review = deleting_review.clone();
+        let reviews = reviews.clone();
+        let error = error.clone();
+        Callback::from(move |_| {
+            let Some(review_id) = *confirming_review else {
+                return;
+            };
+            if *deleting_review == Some(review_id) {
+                return;
+            }
+            deleting_review.set(Some(review_id));
+            error.set(None);
+            let auth = auth.clone();
+            let post_id = post_id.clone();
+            let confirming_review = confirming_review.clone();
+            let deleting_review = deleting_review.clone();
+            let reviews = reviews.clone();
+            let error = error.clone();
+            spawn_local(async move {
+                let result = auth
+                    .with_refresh(|token| {
+                        let post_id = post_id.clone();
+                        async move { review_api::delete_review(&token, &post_id, review_id).await }
+                    })
+                    .await;
+                match result {
+                    Ok(()) => {
+                        let updated = (*reviews)
+                            .iter()
+                            .filter(|review| review.id != review_id)
+                            .cloned()
+                            .collect();
+                        reviews.set(updated);
+                    }
+                    Err(message) => error.set(Some(message.to_string())),
+                }
+                confirming_review.set(None);
+                deleting_review.set(None);
+            });
+        })
+    };
 
     html! {
         <section class="review-section blueprint-block" aria-labelledby="review-section-heading">
@@ -431,6 +498,17 @@ pub fn review_section(props: &ReviewSectionProps) -> Html {
                         {if *saving { "Adding comment..." } else { "Add comment" }}
                     </button>
                 </form>
+            }
+            if let Some(review_id) = *confirming_review {
+                <ConfirmDialog
+                    title="Delete this comment?"
+                    message="This comment will be removed from the story."
+                    confirm_label="Delete comment"
+                    confirm_classes={classes!("action--red")}
+                    busy={*deleting_review == Some(review_id)}
+                    on_confirm={on_confirm_review_delete.clone()}
+                    on_cancel={on_cancel_review_delete.clone()}
+                />
             }
         </section>
     }

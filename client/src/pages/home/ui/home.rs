@@ -1,7 +1,7 @@
 use yew::prelude::*;
 
 use crate::{
-    shared::{body::Body, wrapper::Wrapper},
+    shared::{body::Body, intro::Intro, wrapper::Wrapper},
     widgets::{head::Head, post_feed::PostFeed},
 };
 
@@ -12,11 +12,11 @@ pub fn home() -> Html {
             <Head classes="page__head home__head" />
             <Body classes="page__body home__body">
                 <div class="home__content">
-                    <header class="home__intro blueprint-block">
-                        <p class="home__eyebrow">{"POSTIX JOURNAL"}</p>
-                        <h1>{"Ideas worth sharing."}</h1>
-                        <p>{"Short thoughts and long-form stories, all in one place."}</p>
-                    </header>
+                    <Intro
+                        subtitle="POSTIX JOURNAL"
+                        title="Ideas worth sharing."
+                        description="Short thoughts and long-form stories, all in one place."
+                    />
                     <PostFeed />
                 </div>
             </Body>

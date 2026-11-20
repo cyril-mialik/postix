@@ -2,13 +2,13 @@
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
-  gap: 1rem;
-  padding: clamp(1.1rem, 3vw, 1.5rem);
+  gap: var(--space-8);
+  padding: var(--space-block-compact);
 }
 
 .post-rating__summary {
   display: grid;
-  gap: 0.35rem;
+  gap: var(--space-2);
 }
 
 .post-rating__summary h2 {
@@ -17,7 +17,7 @@
 
 .post-rating__options {
   display: flex;
-  gap: 0.35rem;
+  gap: var(--space-2);
 }
 
 .post-rating__button {

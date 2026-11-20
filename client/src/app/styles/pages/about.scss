@@ -11,39 +11,11 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 1rem;
+  padding: var(--space-page);
 }
 
-.about__content {
-  display: grid;
-  gap: 1rem;
-  width: min(100%, 38rem);
-  padding: clamp(1.5rem, 5vw, 3rem);
-  color: var(--color-main-blue);
-}
-
-.about__eyebrow {
-  color: var(--color-main-blue);
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-}
-
-.about__content h1 {
-  font-size: clamp(2.4rem, 7vw, 4rem);
-  line-height: 1.05;
-}
-
-.about__content > p:not(.about__eyebrow) {
-  color: #000;
-  line-height: 1.65;
-}
-
-.about__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
+.about__body .intro {
+  width: min(100%, 48rem);
 }
 
 .about__primary,
@@ -51,7 +23,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 2rem;
-  padding: 0.35rem 0.65rem;
+  padding: var(--space-2) var(--space-5);
   color: var(--color-main-blue);
   background: transparent;
   border: 0;

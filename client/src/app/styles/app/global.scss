@@ -21,7 +21,7 @@ body {
 
 .page .block p,
 .page .blueprint-block p {
-    color: #000;
+    color: var(--color-pure-black);
 }
 
 .page p[class$="__eyebrow"] {

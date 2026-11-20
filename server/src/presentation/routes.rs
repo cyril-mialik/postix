@@ -16,6 +16,7 @@ pub fn protected_api_configure(cfg: &mut web::ServiceConfig) {
         .service(review::get_reviews)
         .service(review::create_review)
         .service(review::update_review)
+        .service(review::delete_review)
         .service(review::react_to_review)
         .service(rating::get_post_rating)
         .service(rating::rate_post)
@@ -520,7 +521,7 @@ mod tests {
         let mut post_repo = MockPostRepository::new();
         post_repo
             .expect_find_by_id()
-            .times(4)
+            .times(5)
             .returning(move |_| Ok(Some(post.clone())));
 
         let mut review_repo = MockReviewRepository::new();
@@ -536,12 +537,13 @@ mod tests {
         let review_for_update = stored_review.clone();
         review_repo
             .expect_find_by_id()
-            .times(2)
+            .times(3)
             .returning(move |_| Ok(Some(review_for_update.clone())));
         review_repo
             .expect_update()
             .once()
             .returning(|review| Ok(review.clone()));
+        review_repo.expect_delete().once().returning(|_, _| Ok(()));
         let review_for_list = stored_review.clone();
         review_repo
             .expect_find_by_post()
@@ -551,7 +553,7 @@ mod tests {
         let mut user_repo = MockUserRepository::new();
         user_repo
             .expect_find_profile_id_by_auth_id()
-            .times(5)
+            .times(6)
             .returning(move |_| Ok(Some(profile_id)));
 
         let review_repo = Arc::new(review_repo);
@@ -621,6 +623,16 @@ mod tests {
         let updated: ReviewResponse = test::read_body_json(response).await;
         assert_eq!(updated.review, "An updated comment");
         assert!(updated.is_mine);
+
+        let response = test::call_service(
+            &app,
+            test::TestRequest::delete()
+                .uri(&format!("/api/posts/{post_id}/reviews/7"))
+                .insert_header(("Authorization", format!("Bearer {token}")))
+                .to_request(),
+        )
+        .await;
+        assert_eq!(response.status(), StatusCode::NO_CONTENT);
 
         let response = test::call_service(
             &app,

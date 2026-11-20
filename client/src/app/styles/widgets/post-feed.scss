@@ -1,11 +1,11 @@
 .post-feed {
   display: grid;
-  gap: 1.25rem;
+  gap: var(--space-9);
 }
 
 .post-feed__status,
 .post-feed__empty {
-  padding: 1.5rem;
+  padding: var(--space-10);
   color: var(--color-main-blue);
   line-height: 1.5;
 }

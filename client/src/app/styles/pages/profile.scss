@@ -10,28 +10,12 @@
   display: flex;
 }
 
-.profile__intro {
-  display: grid;
-  gap: 0.65rem;
-  padding: clamp(1.25rem, 3vw, 1.8rem);
-}
-
-.profile__intro h1 {
-  color: var(--color-main-blue);
-  font-size: clamp(2rem, 5vw, 3.2rem);
-  line-height: 1.08;
-}
-
-.profile__intro > p:last-child {
-  line-height: 1.6;
-}
-
 .profile__card {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 1rem;
-  padding: clamp(1.25rem, 3vw, 1.8rem);
+  gap: var(--space-8);
+  padding: var(--space-block);
 }
 
 .profile__actions {
@@ -40,7 +24,7 @@
   grid-row: 1;
   align-self: start;
   justify-self: end;
-  gap: 0.5rem;
+  gap: var(--space-4);
 }
 
 .profile__sign-out {
@@ -52,7 +36,7 @@
   width: 3.5rem;
   aspect-ratio: 1;
   place-items: center;
-  color: #fff;
+  color: var(--color-pure-white);
   background: var(--color-main-blue);
   font-size: 1.5rem;
   font-weight: 800;
@@ -69,7 +53,7 @@ img.profile__avatar {
 
 .profile__identity p {
   margin-top: 0.3rem;
-  color: rgb(0 0 255 / 76%);
+  color: var(--color-blue-76);
   overflow-wrap: anywhere;
 }
 
@@ -77,18 +61,18 @@ img.profile__avatar {
   display: grid;
   grid-column: 1 / -1;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
+  gap: var(--space-8);
   padding-top: 1rem;
   border-top: 1px solid var(--color-main-blue);
 }
 
 .profile__stats div {
   display: grid;
-  gap: 0.25rem;
+  gap: var(--space-1);
 }
 
 .profile__stats dt {
-  color: rgb(0 0 255 / 76%);
+  color: var(--color-blue-76);
   font-size: 0.82rem;
 }
 
@@ -99,13 +83,13 @@ img.profile__avatar {
 }
 
 .profile__stories-empty {
-  padding: 1.25rem;
+  padding: var(--space-9);
   line-height: 1.5;
 }
 
 .profile__stories {
   display: grid;
-  gap: 1.5rem;
+  gap: var(--space-10);
 }
 
 .profile__stories-header {
@@ -113,8 +97,8 @@ img.profile__avatar {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  gap: 1rem;
-  padding: clamp(1.1rem, 3vw, 1.5rem);
+  gap: var(--space-8);
+  padding: var(--space-block-compact);
 }
 
 .profile__stories-header h2 {
@@ -124,7 +108,7 @@ img.profile__avatar {
 .profile__tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-4);
 }
 
 .profile__tab {
@@ -133,7 +117,7 @@ img.profile__avatar {
 
 @media (max-width: 600px) {
   .profile__stories {
-    gap: 1rem;
+    gap: var(--space-8);
   }
 
   .profile__stories-header {

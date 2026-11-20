@@ -8,8 +8,8 @@
 
 .meta-menu__link {
   min-height: 2rem;
-  margin: 0;
-  padding: 0.35rem 0.65rem;
+  margin: var(--space-0);
+  padding: var(--space-2) var(--space-5);
   color: var(--color-main-white);
   background: transparent;
   border: 0;

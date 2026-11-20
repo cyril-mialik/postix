@@ -88,6 +88,16 @@ pub async fn update_review(
         .map_err(|error| ApiError::Message(error.to_string()))
 }
 
+pub async fn delete_review(token: &str, post_id: &str, review_id: i32) -> Result<(), ApiError> {
+    let response = Request::delete(&review_endpoint(post_id, review_id))
+        .header("Authorization", &format!("Bearer {token}"))
+        .send()
+        .await
+        .map_err(|error| ApiError::Message(error.to_string()))?;
+    ensure_success(response, "Could not delete this comment.").await?;
+    Ok(())
+}
+
 pub async fn react_to_review(
     token: &str,
     post_id: &str,

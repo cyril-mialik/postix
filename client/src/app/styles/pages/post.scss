@@ -1,19 +1,19 @@
 .post-detail__content-wrapper {
   display: grid;
-  gap: 1.5rem;
+  gap: var(--space-10);
   width: min(100%, 50rem);
   margin: 0 auto;
-  padding: clamp(1.25rem, 4vw, 2.5rem);
+  padding: var(--space-page);
 }
 
 .post-detail__article {
   align-content: start;
-  gap: 1.25rem;
-  padding: clamp(1.25rem, 3vw, 1.8rem);
+  gap: var(--space-9);
+  padding: var(--space-block);
 }
 
 .post-detail__status {
-  padding: 1.25rem;
+  padding: var(--space-9);
 }
 
 .post-detail__actions {
@@ -22,7 +22,7 @@
 }
 
 .post-detail__draft-label {
-  color: #7a4b00;
+  color: var(--color-draft-text);
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -33,7 +33,7 @@
 }
 
 .post-detail__meta {
-  color: rgb(0 0 255 / 72%);
+  color: var(--color-blue-72);
   font-size: 0.9rem;
 }
 

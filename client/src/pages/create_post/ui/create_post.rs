@@ -6,7 +6,7 @@ use postix_core::post::PostPublicationStatus;
 use crate::{
     app::Route,
     features::create_post::CreatePostForm,
-    shared::{body::Body, wrapper::Wrapper},
+    shared::{body::Body, intro::Intro, wrapper::Wrapper},
     widgets::head::Head,
 };
 
@@ -26,11 +26,11 @@ pub fn create_post_page() -> Html {
             <Head classes="page__head create-post-page__head" />
             <Body classes="page__body create-post-page__body">
                 <div class="create-post-page__content">
-                    <header class="create-post-page__intro blueprint-block">
-                        <p class="create-post-page__eyebrow">{"NEW STORY"}</p>
-                        <h1>{"Write for Postix"}</h1>
-                        <p>{"Share a quick thought or take the time to tell the whole story."}</p>
-                    </header>
+                    <Intro
+                        subtitle="NEW STORY"
+                        title="Write for Postix"
+                        description="Share a quick thought or take the time to tell the whole story."
+                    />
                     <CreatePostForm {on_created} />
                 </div>
             </Body>

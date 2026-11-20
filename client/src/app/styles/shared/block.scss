@@ -16,7 +16,7 @@
   color: var(--color-main-red);
   border-color: var(--color-main-red);
   box-shadow: 0.35rem 0.35rem 0 var(--color-main-red);
-  padding: 1.1rem;
+  padding: var(--space-block-compact);
 }
 
 .blueprint-block--error:hover {
@@ -25,7 +25,7 @@
 
 .block {
   display: flex;
-  padding: 0.5rem;
+  padding: var(--space-4);
 }
 
 @media (prefers-reduced-motion: reduce) {

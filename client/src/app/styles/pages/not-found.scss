@@ -15,6 +15,6 @@
 
 .not-found__content {
   display: flex;
-  padding: 5rem;
+  padding: var(--space-not-found);
   font-size: 1.5rem;
 }

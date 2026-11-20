@@ -208,6 +208,16 @@ pub async fn update_post(
         .map_err(|error| ApiError::Message(error.to_string()))
 }
 
+pub async fn delete_post(token: &str, id: &str) -> Result<(), ApiError> {
+    let response = Request::delete(&post_endpoint(id))
+        .header("Authorization", &format!("Bearer {token}"))
+        .send()
+        .await
+        .map_err(|error| ApiError::Message(error.to_string()))?;
+    ensure_success(response, "Could not delete this post.").await?;
+    Ok(())
+}
+
 #[derive(Deserialize)]
 struct ErrorResponse {
     error: String,
@@ -260,6 +270,10 @@ mod tests {
             "/api/posts/7b6ab915-1d04-44f2-b44d-1e84de73a310"
         );
         assert_eq!(post_rating_endpoint("post-id"), "/api/posts/post-id/rating");
+        assert_eq!(
+            post_endpoint("7b6ab915-1d04-44f2-b44d-1e84de73a310"),
+            "/api/posts/7b6ab915-1d04-44f2-b44d-1e84de73a310"
+        );
     }
 
     #[test]

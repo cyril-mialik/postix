@@ -3,7 +3,7 @@ button,
   --action-color: var(--color-main-blue);
 
   min-height: 2.5rem;
-  padding: 0.55rem 0.9rem;
+  padding: var(--space-action-y) var(--space-7);
   color: var(--action-color);
   background: var(--color-main-white);
   border: 1px solid var(--action-color);

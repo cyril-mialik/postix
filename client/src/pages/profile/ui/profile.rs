@@ -11,7 +11,7 @@ use crate::{
         auth::{AuthContext, auth_api},
         edit_profile::EditProfileForm,
     },
-    shared::{body::Body, confirm_dialog::ConfirmDialog, wrapper::Wrapper},
+    shared::{body::Body, confirm_dialog::ConfirmDialog, intro::Intro, wrapper::Wrapper},
     widgets::head::Head,
 };
 
@@ -197,11 +197,11 @@ pub fn profile() -> Html {
             <Head classes="page__head profile__head" />
             <Body classes="page__body profile__body">
                 <div class="profile__content">
-                    <header class="profile__intro blueprint-block">
-                        <p class="profile__eyebrow">{"YOUR ACCOUNT"}</p>
-                        <h1>{"Profile"}</h1>
-                        <p>{"Manage your account and keep track of your published stories and drafts."}</p>
-                    </header>
+                    <Intro
+                        subtitle="YOUR ACCOUNT"
+                        title="Profile"
+                        description="Manage your account and keep track of your published stories and drafts."
+                    />
                     if *loading {
                         <p role="status">{"Loading profile..."}</p>
                     }

@@ -3,7 +3,7 @@ use yew_router::prelude::*;
 
 use crate::{
     app::AuthRoute,
-    shared::{block::Block, body::Body, wrapper::Wrapper},
+    shared::{body::Body, intro::Intro, wrapper::Wrapper},
     widgets::head::Head,
 };
 
@@ -13,15 +13,14 @@ pub fn about() -> Html {
         <Wrapper classes="page about">
             <Head classes="page__head about__head" />
             <Body classes="page__body about__body">
-                <Block classes="about__content">
-                    <p class="about__eyebrow">{"POSTIX"}</p>
-                    <h1>{"A home for ideas."}</h1>
-                    <p>{"Share quick thoughts, publish thoughtful stories, and discover perspectives worth your time."}</p>
-                    <div class="about__actions">
+                <Intro
+                    subtitle="POSTIX"
+                    title="A home for ideas."
+                    description="Share quick thoughts, publish thoughtful stories, and discover perspectives worth your time."
+                >
                         <Link<AuthRoute> to={AuthRoute::SignUp} classes="about__primary">{"Join Postix"}</Link<AuthRoute>>
                         <Link<AuthRoute> to={AuthRoute::SignIn} classes="about__secondary">{"Sign in"}</Link<AuthRoute>>
-                    </div>
-                </Block>
+                </Intro>
             </Body>
         </Wrapper>
     }

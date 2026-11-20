@@ -1,4 +1,4 @@
-use actix_web::{HttpResponse, get, patch, post, web};
+use actix_web::{HttpResponse, delete, get, patch, post, web};
 use uuid::Uuid;
 
 use crate::{
@@ -84,6 +84,19 @@ pub async fn update_review(
     let mut response = ReviewResponse::from(review);
     response.is_mine = true;
     Ok(HttpResponse::Ok().json(response))
+}
+
+#[delete("/posts/{post_id}/reviews/{review_id}")]
+pub async fn delete_review(
+    auth: AuthenticatedUser,
+    service: web::Data<ReviewService>,
+    path: web::Path<(Uuid, i32)>,
+) -> Result<HttpResponse, Error> {
+    let (post_id, review_id) = path.into_inner();
+    service
+        .delete_review(post_id, review_id, auth.user_id)
+        .await?;
+    Ok(HttpResponse::NoContent().finish())
 }
 
 #[post("/posts/{post_id}/reviews/{review_id}/reaction")]
