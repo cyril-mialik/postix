@@ -25,6 +25,15 @@ impl PostgresReportRepository {
 #[async_trait]
 impl ReportRepository for PostgresReportRepository {
     async fn create(&self, report: &Report) -> Result<Report, Error> {
+        let reporter_profile_id = sqlx::query_scalar::<_, Uuid>(
+            "SELECT id FROM profile WHERE auth_id = $1 AND deleted_at IS NULL",
+        )
+        .bind(report.reporter_id)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| Error::System(SystemError::Database(e.to_string())))?
+        .ok_or_else(|| Error::System(SystemError::Database("profile not found".to_owned())))?;
+
         sqlx::query!(
             r#"
             INSERT INTO report (id, reason, message, reporter_id, post_id, status_id, created_at)
@@ -33,7 +42,7 @@ impl ReportRepository for PostgresReportRepository {
             report.id,
             report.reason.as_str(),
             report.message,
-            report.reporter_id,
+            reporter_profile_id,
             report.post_id,
             report.status.as_id(),
             report.created_at,

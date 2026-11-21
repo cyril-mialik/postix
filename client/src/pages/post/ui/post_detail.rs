@@ -16,6 +16,8 @@ use crate::{
 #[derive(Properties, PartialEq)]
 pub struct PostDetailProps {
     pub id: String,
+    #[prop_or_default]
+    pub editing_mode: bool,
 }
 
 #[function_component(PostDetail)]
@@ -26,7 +28,8 @@ pub fn post_detail(props: &PostDetailProps) -> Html {
     let current_user = use_state(|| None::<UserResponse>);
     let error = use_state(|| None::<String>);
     let loading = use_state(|| true);
-    let editing_post = use_state(|| false);
+    let editing_post = use_state(|| props.editing_mode);
+    let editing_mode = props.editing_mode;
     let confirming_post_delete = use_state(|| false);
     let deleting_post = use_state(|| false);
 
@@ -43,7 +46,7 @@ pub fn post_detail(props: &PostDetailProps) -> Html {
             current_user.set(None);
             error.set(None);
             loading.set(true);
-            editing_post.set(false);
+            editing_post.set(editing_mode);
             if auth.is_ready {
                 spawn_local(async move {
                     let result = auth
@@ -75,19 +78,22 @@ pub fn post_detail(props: &PostDetailProps) -> Html {
     }
 
     let on_edit_post = {
-        let editing_post = editing_post.clone();
-        Callback::from(move |_| editing_post.set(true))
+        let navigator = navigator.clone();
+        let id = props.id.clone();
+        Callback::from(move |_| navigator.push(&Route::EditPost { id: id.clone() }))
     };
     let on_cancel_post_edit = {
-        let editing_post = editing_post.clone();
-        Callback::from(move |_| editing_post.set(false))
+        let navigator = navigator.clone();
+        let id = props.id.clone();
+        Callback::from(move |_| navigator.push(&Route::Post { id: id.clone() }))
     };
     let on_post_saved = {
         let post = post.clone();
-        let editing_post = editing_post.clone();
+        let navigator = navigator.clone();
+        let id = props.id.clone();
         Callback::from(move |updated: PostResponse| {
             post.set(Some(updated));
-            editing_post.set(false);
+            navigator.push(&Route::Post { id: id.clone() });
         })
     };
     let on_open_post_delete = {

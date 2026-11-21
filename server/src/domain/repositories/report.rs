@@ -3,6 +3,7 @@ use uuid::Uuid;
 
 use crate::domain::entities::{errors::Error, report::Report, report_status::ReportStatus};
 
+#[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait ReportRepository: Send + Sync {
     async fn create(&self, report: &Report) -> Result<Report, Error>;

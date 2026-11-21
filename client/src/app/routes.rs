@@ -30,10 +30,10 @@ pub enum AuthRoute {
 
 #[derive(Clone, Routable, PartialEq)]
 pub enum Route {
-    #[at("/")]
+    #[at("/about")]
     About,
 
-    #[at("/home")]
+    #[at("/")]
     Home,
 
     #[at("/search")]
@@ -42,8 +42,14 @@ pub enum Route {
     #[at("/profile")]
     Profile,
 
-    #[at("/posts/new")]
+    #[at("/posts/create")]
     CreatePost,
+
+    #[at("/posts/:id/edit")]
+    EditPost { id: String },
+
+    #[at("/profile/edit")]
+    EditProfile,
 
     #[at("/posts/:id")]
     Post { id: String },
@@ -78,6 +84,16 @@ pub fn switch_auth(route: AuthRoute) -> Html {
 
 pub fn switch(routes: Route) -> Html {
     match routes {
+        Route::EditPost { id } => html! {
+            <RequireAuth>
+                <PostDetail {id} editing_mode=true />
+            </RequireAuth>
+        },
+        Route::EditProfile => html! {
+            <RequireAuth>
+                <Profile editing_mode=true />
+            </RequireAuth>
+        },
         Route::Home => html! {
             <RequireAuth>
                 <Home />
@@ -120,12 +136,18 @@ mod tests {
     #[test]
     fn new_post_route_precedes_the_dynamic_post_route() {
         assert!(matches!(
-            Route::recognize("/posts/new"),
+            Route::recognize("/posts/create"),
             Some(Route::CreatePost)
+        ));
+        assert!(matches!(
+            Route::recognize("/posts/abc/edit"),
+            Some(Route::EditPost { id }) if id == "abc"
         ));
         assert!(matches!(
             Route::recognize("/posts/abc"),
             Some(Route::Post { id }) if id == "abc"
         ));
+        assert!(matches!(Route::recognize("/"), Some(Route::Home)));
+        assert!(matches!(Route::recognize("/about"), Some(Route::About)));
     }
 }

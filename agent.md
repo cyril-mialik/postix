@@ -1,73 +1,196 @@
 # Agent guide
 
-## Project
+**Postix** — MVP-приложение для социальной публикации в духе ленты-первым и отдельного лонгрид-редактора, оформленное в визуальном стиле blueprint.
 
-Postix is an MVP social publishing app between Twitter and Medium. It is a Rust workspace with a Yew/WebAssembly client, an Actix Web API, PostgreSQL, Redis, and a small shared-contract crate.
+Это Rust-workspace: Yew/WebAssembly client и Actix Web API, PostgreSQL и Redis для server. Небольшой общий крейт контрактов `core` хранит типы запросов/ответов, используемые обеими сторонами.
 
-Workspace members:
+## Члены workspace
 
 - `client/` — Yew single-page application.
-- `server/` — Actix Web API and persistence.
-- `core/` — request/response contracts shared by client and server.
+- `server/` — Actix Web API и персистентность.
+- `core/` — контракты запросов/ответов, общие для client и server. Это независимый крейт в workspace, а не модуль или слой внутри `server/`.
 
-`core/` is an independent crate in the workspace, not a module or layer inside `server/`.
+---
 
-## Architecture
+# Architecture
 
-### Server: DDD
+## Server: DDD
 
-Keep dependencies flowing inward:
+Зависимости должны течь внутрь.
 
-- `server/src/domain/` — entities, domain rules, and repository interfaces. Do not put SQL, HTTP, or framework details here.
-- `server/src/application/` — use cases and orchestration through domain repository interfaces.
-- `server/src/infrastructure/` — PostgreSQL/Redis adapters, migrations, auth middleware, and security implementations.
-- `server/src/presentation/` — routes, handlers, extractors, DTO mapping, and HTTP error conversion.
-- `server/migrations/` — forward-only database schema changes. Add a migration instead of editing an already-applied migration.
+- `server/src/domain/` — сущности, доменные правила и интерфейсы репозиториев. Не размещать здесь SQL, HTTP и детали фреймворков.
+- `server/src/application/` — use cases и оркестрация через доменные интерфейсы репозиториев.
+- `server/src/infrastructure/` — адаптеры PostgreSQL/Redis, миграции, auth-middleware и реализации безопасности.
+- `server/src/presentation/` — роуты, хэндлеры, экстракторы, маппинг DTO и преобразование ошибок в HTTP.
+- `server/migrations/` — forward-only изменения схемы БД. Добавлять миграцию, а не редактировать уже применённую.
 
-Do not bypass application services from handlers or access infrastructure repositories directly from domain code.
+**Правила границ:**
+- Не обходить application-сервисы из хэндлеров.
+- Не обращаться к инфраструктурным репозиториям напрямую из доменного кода.
+- Все доменные лимиты (пост 30 000 символов, отзыв 10 000, жалоба 3 000; один отзыв на пользователя на пост; оценка 1–5) валидировать в domain/application, а не только в UI.
+- Schema.dbml в `server/src/infrastructure/` — единый источник правды по схеме БД. Каждое изменение БД должно сопровождаться миграцией и обновлением schema.dbml.
 
-### Client: FSD
+## Client: FSD
 
-Keep UI and behavior in the appropriate layer:
+Держать UI и поведение в соответствующем слое:
 
-- `client/src/app/` — app setup, router, and layout.
-- `client/src/pages/` — route-level composition; keep reusable business logic out of pages.
-- `client/src/widgets/` — larger reusable page sections, such as the post feed and header.
-- `client/src/features/` — user actions and flows, such as authentication and creating a post.
-- `client/src/entities/` — post/user models, API access, and entity UI.
-- `client/src/shared/` — generic UI and cross-cutting primitives.
+- `client/src/app/` — настройка приложения, роутер и layout.
+- `client/src/pages/` — композиция на уровне роутов; не держать переиспользуемую бизнес-логику в страницах.
+- `client/src/widgets/` — крупные переиспользуемые секции страниц, например лента постов и хедер.
+- `client/src/features/` — действия и потоки пользователя, например аутентификация и создание поста.
+- `client/src/entities/` — модели поста/пользователя, доступ к API и UI сущностей.
+- `client/src/shared/` — общие UI-примитивы и cross-cutting вещи.
 
-Prefer one-way imports from higher-level slices to lower-level layers. Do not make `shared` depend on `features`, `widgets`, or `pages`.
-Import a slice through its public API at the slice root rather than reaching into another slice's internal files. Keep each slice's exports in its `mod.rs`.
+**Правила импортов:**
+- Предпочитать однонаправленные импорты от вышележащих слайсов к нижележащим слоям.
+- Не позволять `shared` зависеть от `features`, `widgets` или `pages`.
+- Импортировать слайс через его публичный API в корне слайса, а не лезть во внутренние файлы другого слайса.
+- Держать экспорты каждого слайса в его `mod.rs`.
 
-## Product direction
+---
 
-- Use Twitter as the model for the social experience: make the home timeline the primary screen, keep browsing and publishing straightforward, and present posts as items in a shared feed.
-- Use Medium as the model for authoring: provide a dedicated writing flow with a title, long-form body, tags, and a clear publish action. Do not put the editor on the feed page.
-- Treat these as product directions, not a requirement to clone every feature from either service. Implement only MVP interactions supported by the existing API or explicitly added to its contract.
-- Do not imply that follows, replies, or other social interactions work until their client and API flows are implemented and tested.
+# Product direction
 
-## Current MVP behavior and constraints
+**Feed-first social UX:** главный экран — это домашняя лента. Посты отображаются как карточки-превью в общей ленте; просмотр и быстрые действия доступны в один клик.
 
-- Unauthenticated visitors may access About, sign-in, and sign-up only.
-- Protected routes wait for session validation, then redirect unauthenticated users to sign-in.
-- The client refreshes the access token on startup and retries a protected request once after `401`. Invalid refresh sessions clear local auth state and redirect to sign-in.
-- Home is the feed. Post creation is a separate page at `/posts/new`; post details use `/posts/:id`.
-- The authenticated profile provides published-post and draft views; drafts and deleted posts are private.
-- Users can edit their profile details, their own posts (including tags), and their own comments.
-- Keep sign-out on the profile page only.
-- The writing form accepts a title, plain-text body, and tags. Authors can publish immediately or save a draft; confirm before committing publish, draft, or sign-out actions.
-- Feed cards link to the full post, and previews show at most the first 150 characters of the body.
-- Post details show a 1–5 star rating, comments, and per-comment Agree/Disagree reactions. Keep comment reactions distinct from numeric post ratings.
-- Search filters the posts currently loaded by the client; it is not a full server-side search.
-- Blueprint blocks share the app's blue/green/red action palette and consistent hover treatment; preserve the shared styles when changing pages.
-- Drafts and soft-deleted posts must not be exposed as public posts.
+**Dedicated long-form authoring:** написание происходит в отдельном потоке — заголовок, длинный текст, теги/хэштеги и явное действие публикации. Редактор никогда не должен находиться на странице ленты.
 
-Preserve these behaviors when changing routing, auth, or post flows. Add a server endpoint only when the MVP needs behavior that the existing API cannot provide.
+Это UX-паттерны, а не цель достичь функционального паритета. Не переносить бренд-специфичные фичи (claps, ретвиты, publications, partner programs, verified-бейджи, spaces, ответы, треды, алгоритмический ранкинг), если они явно не входят в MVP-скоуп ниже.
 
-## Development
+### Что явно не моделируется по этим паттернам
 
-Set up local dependencies and run the services:
+- Отзывы уникальны: один отзыв на пользователя на пост, редактируемый, с реакциями like/dislike. Это не claps, не лайки и не ретвиты.
+- Оценки — числовые 1–5, а не claps и не звёзды-с-текстом.
+- Отзывы плоские — без вложенности и тредов.
+- Заинтересованность для уведомлений и истории изменений определяется добавлением поста в закладки, а не подпиской и не алгоритмическим ранкингом.
+- Визуальный язык — blueprint: блоки используют общую палитру действий blue/green/red и единообразную обработку hover. При изменении страниц сохранять общие стили.
+
+Не подразумевать, что подписки, ответы, уведомления, история или другие социальные взаимодействия работают end-to-end, пока их клиентские и API-потоки не реализованы и не протестированы.
+
+---
+
+# Core domain: посты, отзывы, оценки
+
+Центральный домен — написание постов. Каждый пост можно оценить и оставить на него отзыв.
+
+**Пост:**
+- Поддерживает числовую оценку от 1 до 5.
+- Редактируемый (заголовок, тело, хэштеги).
+- Лимит тела поста: 30 000 символов.
+- Посты несут хэштеги.
+- Метаданные поста: количество просмотров, рейтинг, количество отзывов.
+
+**Отзыв:**
+- Пользователь может оставить не более одного отзыва на пост.
+- Отзыв редактируемый.
+- Отзывы плоские — без вложенности.
+- Лимит тела отзыва: 10 000 символов.
+- Другие пользователи могут поддержать (like) или не согласиться (dislike) с отзывом. Реакции на отзывы держать отдельно от числовых оценок поста.
+
+**Жалобы:**
+- Пользователи могут пожаловаться на пост.
+- Лимит тела жалобы: 3 000 символов.
+
+Любое изменение поста или отзыва фиксируется в истории изменений (запись в БД). Уведомления заинтересованным пользователям — только после реализации end-to-end потока уведомлений. Заинтересованность определяется добавлением поста в закладки.
+
+Пользователи могут добавлять пост в закладки (save). Черновики и мягко удалённые посты приватны и не должны раскрываться как публичные посты.
+
+---
+
+# Страницы и потоки
+
+## Home (`/` — лента)
+
+Для MVP лента формируется из постов авторов из тестового набора/seed-данных (подписки не реализованы end-to-end). Лента показывает посты как карточки-превью.
+
+Элементы ленты — это превью: заголовок поста плюс первые 200 символов тела.
+
+Каждый блок-превью показывает мета-информацию: количество просмотров, оценку, время публикации, имя автора и его аватар.
+
+Каждый блок-превью предоставляет два быстрых действия: добавить в закладки и пожаловаться.
+
+Клик по превью ведёт на полную страницу поста по адресу `/posts/:uuid`.
+
+## Search (`/search`)
+
+Инпут поиска с кнопкой Find.
+
+Фильтры: по времени, по популярности, по контенту, по заголовку.
+
+Префиксные операторы поиска:
+- `@name` — поиск по автору.
+- `#tag` — поиск по хэштегу, присутствующему в постах.
+
+## Profile (`/profile`)
+
+Блок пользователя: имя, никнейм, аватар, email.
+
+Мета-информация: количество постов, количество подписок, количество подписчиков, суммарное количество просмотров по всем постам пользователя.
+
+Табы: Published / Draft — каждый отображается как лента.
+
+Быстрые действия: выйти из аккаунта и редактировать аккаунт.
+
+Выход из аккаунта живёт только на странице профиля.
+
+Черновики и мягко удалённые посты приватны и не должны раскрываться как публичные посты.
+
+## Create post (`/posts/create`)
+
+Три инпута: заголовок, тело, хэштеги.
+
+Два действия: Publish и Draft — каждое переводит пост в соответствующую категорию.
+
+Подтверждать перед фиксацией публикации или черновика.
+
+Тело поста — plain text (без Markdown/HTML). Рендеринг в UI — как текст; не использовать raw HTML.
+
+## Edit post (`/posts/:uuid/edit`)
+
+Показывает текущий пост и позволяет редактировать заголовок, тело и хэштеги.
+
+Подтверждать перед фиксацией изменений.
+
+## Edit profile (`/profile/edit`)
+
+Редактируемые поля: имя, никнейм, аватар.
+
+---
+
+# Auth
+
+Регистрация (`/auth/sign-up`): центрированный блок с полями email и password.
+
+Вход (`/auth/sign-in`): центрированный блок с полями email и password.
+
+Неаутентифицированные посетители имеют доступ только к About, sign-in и sign-up.
+
+Защищённые роуты ждут валидации сессии, затем перенаправляют неаутентифицированных пользователей на sign-in.
+
+Сервер не хранит состояние сессии; при невалидном токене возвращает 401. Клиент обновляет access token при старте и один раз повторяет защищённый запрос после 401. Невалидные refresh-сессии очищают локальное состояние аутентификации и перенаправляют на sign-in.
+
+Выход из аккаунта держать только на странице профиля.
+
+---
+
+# Current MVP behavior and constraints
+
+- Home — это лента. Создание поста — отдельная страница по адресу `/posts/create`; детали поста — `/posts/:uuid`.
+- Пользователи могут редактировать детали своего профиля, свои посты (включая хэштеги) и свои отзывы.
+- Форма написания принимает заголовок, plain-text тело и хэштеги. Авторы могут публиковать сразу или сохранять черновик; подтверждать перед фиксацией publish, draft или sign-out.
+- Карточки ленты ведут на полный пост, а превью показывают не более первых 200 символов тела.
+- Страница поста показывает рейтинг 1–5 звёзд и отзывы с реакциями Agree/Disagree на каждый отзыв. Реакции на отзывы держать отдельно от числовых оценок поста.
+- Поиск работает в рамках фильтров и префиксных операторов, описанных выше.
+- Блоки blueprint используют общую палитру действий blue/green/red и единообразную обработку hover; сохранять общие стили при изменении страниц.
+- Черновики и мягко удалённые посты не должны раскрываться как публичные посты.
+- MVP-граница: реализовывать только то, что поддерживает контракт API или что явно добавлено в него. Не подразумевать, что подписки, ответы, уведомления или история связаны end-to-end, пока их клиентские и API-потоки не реализованы и не протестированы.
+- Сохранять это поведение при изменении роутинга, auth или потоков постов. Добавлять серверный эндпоинт только когда MVP нуждается в поведении, которого существующий API не может предоставить.
+
+---
+
+# Development
+
+Настроить локальные зависимости и запустить сервисы:
 
 ```bash
 cp .env.example .env
@@ -76,29 +199,29 @@ cargo run -p server
 cd client && trunk serve
 ```
 
-Build the client from its package directory:
+Собирать клиент из его package-директории:
 
 ```bash
 cd client && trunk build --release
 ```
 
-Run the primary checks from the workspace root:
+Запускать основные проверки из корня workspace:
 
 ```bash
 cargo fmt --all -- --check
 cargo test --workspace
 ```
 
-## Change and test expectations
+# Change and test expectations
 
-- Make small, focused changes and follow existing Rust/Yew patterns.
-- Keep validation and authorization in the domain/application layers as appropriate; handlers should translate HTTP input and output.
-- Treat all client input and API responses as untrusted. Never render post content as raw HTML.
-- Do not log access tokens, refresh tokens, passwords, or other credentials. Keep secrets in environment configuration, not source.
-- Add unit tests for new domain rules, transformations, and validation.
-- Add Actix integration tests for new or changed API behavior, including authentication and response contracts where relevant.
-- Add client tests for routing, API contracts, and state/refresh behavior. Run the WebAssembly production build when client code changes.
-- Keep tests deterministic and avoid requiring a live PostgreSQL or Redis instance unless the test is explicitly an environment-backed integration test.
-- Add each database change as a forward-only migration and update `server/src/infrastructure/schema.dbml` in the same change.
-- Run the narrowest relevant tests while iterating, then run `cargo test --workspace` and formatting checks before finishing.
-- Update this file or `README.md` if project commands, architecture, or MVP behavior materially changes.
+- Делать небольшие сфокусированные изменения и следовать существующим паттернам Rust/Yew.
+- Держать валидацию и авторизацию в доменном/application-слоях, как уместно; хэндлеры должны транслировать HTTP-вход и выход.
+- Считать весь клиентский ввод и ответы API недоверенными. Никогда не рендерить содержимое поста как raw HTML.
+- Не логировать access tokens, refresh tokens, пароли и другие учётные данные. Держать секреты в конфигурации окружения, а не в исходниках.
+- Добавлять unit-тесты для новых доменных правил, трансформаций и валидации.
+- Добавлять Actix integration-тесты для нового или изменённого поведения API, включая аутентификацию и контракты ответов, где уместно. Integration-тесты, требующие БД, должны использовать изолированную схему/БД и не зависеть от общей dev-базы.
+- Добавлять клиентские тесты для роутинга, контрактов API и поведения состояния/refresh. Запускать production-сборку WebAssembly при изменении клиентского кода.
+- Держать тесты детерминированными и избегать требования живого PostgreSQL или Redis, если тест явно не является environment-backed integration-тестом.
+- Добавлять каждое изменение БД как forward-only миграцию и обновлять server/src/infrastructure/schema.dbml в том же изменении.
+- Запускать самые узкие релевантные тесты во время итераций, затем cargo test --workspace и проверки форматирования перед завершением.
+- Обновлять этот файл или README.md, если команды проекта, архитектура или MVP-поведение существенно меняются.

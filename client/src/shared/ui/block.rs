@@ -6,6 +6,7 @@ pub enum Tag {
     Header,
     Footer,
     Section,
+    Menu,
 }
 
 #[derive(Properties, PartialEq)]
@@ -42,6 +43,11 @@ pub fn block(props: &BlockProps) -> Html {
             <div class={classes!("block", props.classes.clone())}>
                 { for props.children.iter() }
             </div>
+        },
+        Tag::Menu => html! {
+            <menu class={classes!("block", props.classes.clone())}>
+                { for props.children.iter() }
+            </menu>
         },
     }
 }

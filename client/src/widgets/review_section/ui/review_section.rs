@@ -314,7 +314,7 @@ pub fn review_section(props: &ReviewSectionProps) -> Html {
                         <textarea
                             aria-label="Edit your comment"
                             value={(*editing_text).clone()}
-                            maxlength="5000"
+                            maxlength="10000"
                             rows="4"
                             required=true
                             disabled={edit_busy}
@@ -488,7 +488,7 @@ pub fn review_section(props: &ReviewSectionProps) -> Html {
                     <textarea
                         id="post-comment"
                         value={(*comment).clone()}
-                        maxlength="5000"
+                        maxlength="10000"
                         rows="4"
                         required=true
                         disabled={*saving || *loading}

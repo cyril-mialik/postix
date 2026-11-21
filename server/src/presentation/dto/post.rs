@@ -10,6 +10,8 @@ impl From<Post> for PostResponse {
         Self {
             id: post.id,
             author_id: post.author_id,
+            author_username: post.author_username,
+            author_avatar: post.author_avatar,
             title: post.title,
             content: post.content,
             status: post.status.as_str().to_owned(),
@@ -63,6 +65,8 @@ mod tests {
         let post = Post {
             id: Uuid::nil(),
             author_id: Uuid::from_u128(1),
+            author_username: "writer".to_owned(),
+            author_avatar: Some("https://example.com/avatar.png".to_owned()),
             title: "A post".to_owned(),
             content: json!({"body": "Hello"}),
             status: PostStatus::Published,
@@ -90,6 +94,11 @@ mod tests {
 
         assert_eq!(response.posts.len(), 1);
         assert_eq!(response.posts[0].status, "published");
+        assert_eq!(response.posts[0].author_username, "writer");
+        assert_eq!(
+            response.posts[0].author_avatar.as_deref(),
+            Some("https://example.com/avatar.png")
+        );
         assert_eq!(response.posts[0].content, json!({"body": "Hello"}));
         assert_eq!(response.posts[0].media.len(), 1);
         assert_eq!(response.posts[0].media[0].media_type, "image");

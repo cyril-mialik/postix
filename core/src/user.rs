@@ -13,6 +13,8 @@ pub struct UserResponse {
     pub followers_count: i32,
     pub following_count: i32,
     pub posts_count: i32,
+    #[serde(default)]
+    pub total_views_count: i64,
     pub role: String,
     pub theme: String,
     pub is_email_verified: bool,

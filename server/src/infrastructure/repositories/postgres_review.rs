@@ -131,6 +131,27 @@ impl ReviewRepository for PostgresReviewRepository {
     }
 
     async fn update(&self, review: &Review) -> Result<Review, Error> {
+        let mut tx = self
+            .pool
+            .begin()
+            .await
+            .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
+
+        sqlx::query(
+            r#"
+            INSERT INTO post_review_history (review_id, post_id, snapshot)
+            SELECT id, post_id, jsonb_build_object('review', review)
+            FROM post_review
+            WHERE id = $1 AND post_id = $2 AND profile_id = $3
+            "#,
+        )
+        .bind(review.id)
+        .bind(review.post_id)
+        .bind(review.profile_id)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
+
         let result = sqlx::query(
             "UPDATE post_review SET review = $4, updated_at = NOW() WHERE id = $1 AND post_id = $2 AND profile_id = $3",
         )
@@ -138,13 +159,16 @@ impl ReviewRepository for PostgresReviewRepository {
         .bind(review.post_id)
         .bind(review.profile_id)
         .bind(&review.review)
-        .execute(&self.pool)
+        .execute(&mut *tx)
         .await
         .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
 
         if result.rows_affected() == 0 {
             return Err(Error::Review(ReviewError::NotFound));
         }
+        tx.commit()
+            .await
+            .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
         Ok(review.clone())
     }
 

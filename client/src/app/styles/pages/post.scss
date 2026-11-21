@@ -1,9 +1,7 @@
 .post-detail__content-wrapper {
   display: grid;
-  gap: var(--space-10);
-  width: min(100%, 50rem);
-  margin: 0 auto;
-  padding: var(--space-page);
+  gap: var(--page-gap);
+  width: 100%;
 }
 
 .post-detail__article {

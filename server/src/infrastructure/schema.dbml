@@ -150,6 +150,29 @@ Table post_review {
   }
 }
 
+Table post_history {
+  id bigint [pk, increment]
+  snapshot jsonb [not null]
+  created_at timestamptz [default: `now()`, not null]
+  post_id uuid [not null]
+
+  indexes {
+    (post_id, created_at) [name: 'idx_post_history_post_created']
+  }
+}
+
+Table post_review_history {
+  id bigint [pk, increment]
+  review_id int [not null]
+  snapshot jsonb [not null]
+  created_at timestamptz [default: `now()`, not null]
+  post_id uuid [not null]
+
+  indexes {
+    (review_id, created_at) [name: 'idx_post_review_history_review_created']
+  }
+}
+
 Table post_review_reaction {
   id int [pk, increment]
   reaction varchar(8) [not null]
@@ -323,6 +346,8 @@ Ref post_post_rating: post.id < post_rating.post_id [delete: cascade, update: ca
 Ref profile_post_rating: profile.id < post_rating.profile_id [delete: cascade, update: cascade]
 
 Ref post_post_review: post.id < post_review.post_id [delete: cascade, update: cascade]
+Ref post_post_history: post.id < post_history.post_id [delete: cascade, update: cascade]
+Ref post_post_review_history: post.id < post_review_history.post_id [delete: cascade, update: cascade]
 Ref post_review_reaction_review: post_review.id < post_review_reaction.review_id [delete: cascade, update: cascade]
 Ref profile_post_review_reaction: profile.id < post_review_reaction.profile_id [delete: cascade, update: cascade]
 Ref profile_post_review: profile.id < post_review.profile_id [delete: cascade, update: cascade]

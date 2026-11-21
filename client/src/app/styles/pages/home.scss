@@ -6,8 +6,12 @@
   display: flex;
 }
 
-.home__body {
+.home__body,
+.search__body,
+.profile__body,
+.post-detail__body {
   display: flex;
+  align-items: flex-start;
 }
 
 .home__body .body__container,
@@ -20,13 +24,10 @@
 
 .home__content,
 .search__content,
-.profile__content,
-.post-detail__article {
+.profile__content {
   display: grid;
   gap: var(--space-10);
-  width: min(100%, 48rem);
-  margin: 0 auto;
-  padding: var(--space-page);
+  width: 100%;
 }
 
 .post-detail__title {
@@ -38,10 +39,8 @@
 @media (max-width: 600px) {
   .home__content,
   .search__content,
-  .profile__content,
-  .post-detail__article {
+  .profile__content {
     gap: var(--space-8);
-    padding: var(--space-8);
   }
 
   .create-post__actions,

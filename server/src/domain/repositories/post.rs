@@ -19,5 +19,6 @@ pub trait PostRepository: Send + Sync {
     async fn update(&self, post: &Post) -> Result<Post, Error>;
     async fn soft_delete(&self, id: Uuid, deleted_by: Uuid) -> Result<(), Error>;
     async fn increment_views(&self, id: Uuid) -> Result<(), Error>;
+    async fn total_views_by_author(&self, author_id: Uuid) -> Result<i64, Error>;
     async fn update_reviews_count(&self, id: Uuid, delta: i32) -> Result<(), Error>;
 }

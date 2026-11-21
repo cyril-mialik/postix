@@ -24,8 +24,8 @@ pub fn review_reaction_endpoint(post_id: &str, review_id: i32) -> String {
 pub fn build_review_request(review: &str) -> Result<ReviewRequest, String> {
     let review = review.trim();
     let length = review.chars().count();
-    if !(1..=5000).contains(&length) {
-        return Err("Comments must be between 1 and 5000 characters.".to_owned());
+    if !(1..=10_000).contains(&length) {
+        return Err("Comments must be between 1 and 10000 characters.".to_owned());
     }
 
     Ok(ReviewRequest {
@@ -184,6 +184,6 @@ mod tests {
             }
         );
         assert!(build_review_request(" \n ").is_err());
-        assert!(build_review_request(&"x".repeat(5001)).is_err());
+        assert!(build_review_request(&"x".repeat(10_001)).is_err());
     }
 }

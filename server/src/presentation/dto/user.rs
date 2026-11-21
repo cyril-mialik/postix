@@ -14,6 +14,7 @@ impl From<User> for UserResponse {
             followers_count: user.followers_count,
             following_count: user.following_count,
             posts_count: user.posts_count,
+            total_views_count: 0,
             role: user.role.as_str().to_string(),
             theme: match user.theme {
                 crate::domain::entities::theme::Theme::Light => "light".to_string(),

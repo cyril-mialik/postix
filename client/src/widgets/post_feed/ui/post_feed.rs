@@ -1,9 +1,10 @@
+use std::time::{SystemTime, UNIX_EPOCH};
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
 
 use crate::{
-    entities::post::{PostCard, matches_query, post_api},
-    features::auth::AuthContext,
+    entities::post::{PostCard, SearchField, matches_query_in_field, post_api},
+    features::{auth::AuthContext, post_actions::PostActions},
 };
 
 const PAGE_SIZE: usize = 20;
@@ -13,6 +14,12 @@ pub struct PostFeedProps {
     #[prop_or_default]
     pub query: String,
     #[prop_or_default]
+    pub search_field: SearchField,
+    #[prop_or_default]
+    pub period: String,
+    #[prop_or_default]
+    pub sort: String,
+    #[prop_or_default]
     pub refresh_key: u32,
 }
 
@@ -20,6 +27,7 @@ pub struct PostFeedProps {
 pub fn post_feed(props: &PostFeedProps) -> Html {
     let auth = use_context::<AuthContext>().expect("AuthContext not found");
     let posts = use_state(Vec::new);
+    let bookmarked_ids = use_state(Vec::<String>::new);
     let offset = use_state(|| 0_usize);
     let loading = use_state(|| true);
     let loading_more = use_state(|| false);
@@ -28,6 +36,7 @@ pub fn post_feed(props: &PostFeedProps) -> Html {
 
     {
         let posts = posts.clone();
+        let bookmarked_ids = bookmarked_ids.clone();
         let offset = offset.clone();
         let loading = loading.clone();
         let has_more = has_more.clone();
@@ -35,6 +44,7 @@ pub fn post_feed(props: &PostFeedProps) -> Html {
         let auth = auth.clone();
         use_effect_with((auth.is_ready, props.refresh_key), move |_| {
             posts.set(Vec::new());
+            bookmarked_ids.set(Vec::new());
             offset.set(0);
             has_more.set(false);
             error.set(None);
@@ -50,6 +60,15 @@ pub fn post_feed(props: &PostFeedProps) -> Html {
                             has_more.set(result.len() == PAGE_SIZE);
                             offset.set(result.len());
                             posts.set(result);
+                            match auth
+                                .with_refresh(|token| async move {
+                                    post_api::get_bookmarks(&token).await
+                                })
+                                .await
+                            {
+                                Ok(bookmarks) => bookmarked_ids.set(bookmarks),
+                                Err(message) => error.set(Some(message.to_string())),
+                            }
                         }
                         Err(message) => error.set(Some(message.to_string())),
                     }
@@ -109,11 +128,32 @@ pub fn post_feed(props: &PostFeedProps) -> Html {
     };
 
     let query = props.query.trim();
-    let visible_posts = posts
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("system time is after the Unix epoch")
+        .as_secs() as i64;
+    let cutoff = match props.period.as_str() {
+        "day" => Some(now - 60 * 60 * 24),
+        "week" => Some(now - 60 * 60 * 24 * 7),
+        "month" => Some(now - 60 * 60 * 24 * 30),
+        _ => None,
+    };
+    let mut visible_posts = posts
         .iter()
-        .filter(|post| matches_query(post, query))
+        .filter(|post| matches_query_in_field(post, query, props.search_field))
+        .filter(|post| cutoff.map_or(true, |cutoff| post.created_at.timestamp() >= cutoff))
         .cloned()
         .collect::<Vec<_>>();
+    if props.sort == "popular" {
+        visible_posts.sort_by_key(|post| {
+            i64::from(post.views_count)
+                + i64::from(post.rating_count) * 5
+                + i64::from(post.reviews_count) * 3
+        });
+        visible_posts.reverse();
+    } else {
+        visible_posts.sort_by(|left, right| right.created_at.cmp(&left.created_at));
+    }
     html! {
         <section class="post-feed" aria-label="Posts">
             if *loading {
@@ -127,8 +167,15 @@ pub fn post_feed(props: &PostFeedProps) -> Html {
                     {if query.is_empty() { "No stories yet. Be the first to publish one." } else { "No stories match your search." }}
                 </p>
             }
-            {for visible_posts.into_iter().map(|post| html! {
-                <PostCard post={post.clone()} key={post.id.to_string()} />
+            {for visible_posts.into_iter().map(|post| {
+                let post_id = post.id.to_string();
+                let is_bookmarked = bookmarked_ids.iter().any(|id| id == &post_id);
+                html! {
+                    <div class="post-feed__item" key={post_id.clone()}>
+                        <PostCard post={post.clone()} />
+                        <PostActions post_id={post_id} initially_bookmarked={is_bookmarked} />
+                    </div>
+                }
             })}
             if *has_more {
                 <button

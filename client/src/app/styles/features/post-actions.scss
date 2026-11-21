@@ -1,0 +1,44 @@
+.post-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-main-blue);
+}
+
+.post-actions__button,
+.post-actions__report-form button,
+.post-actions__report-form select,
+.post-actions__report-form textarea {
+  min-height: 2.5rem;
+  padding: var(--space-input-y) var(--space-input-x);
+  color: var(--color-main-blue);
+  background: var(--color-main-white);
+  border: 1px solid var(--color-main-blue);
+  font: inherit;
+}
+
+.post-actions__button--report {
+  color: var(--color-main-red);
+  border-color: var(--color-main-red);
+}
+
+.post-actions__report-form {
+  display: grid;
+  flex-basis: 100%;
+  gap: var(--space-3);
+  padding: var(--space-block);
+}
+
+.post-actions__report-form textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.post-actions__notice {
+  color: var(--color-main-green);
+}
+
+.post-actions__error {
+  color: var(--color-main-red);
+}

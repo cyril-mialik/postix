@@ -159,6 +159,7 @@ pub fn create_post_form(props: &CreatePostFormProps) -> Html {
                     id="post-text"
                     class="create-post__textarea"
                     value={(*text).clone()}
+                    maxlength="30000"
                     rows="5"
                     placeholder="What would you like to share?"
                     required=true

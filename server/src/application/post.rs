@@ -64,6 +64,10 @@ impl PostService {
         Ok(posts.into_iter().filter(Post::is_visible).collect())
     }
 
+    pub async fn total_views_by_author(&self, author_id: Uuid) -> Result<i64, Error> {
+        self.post_repo.total_views_by_author(author_id).await
+    }
+
     pub async fn get_post(&self, post_id: Uuid) -> Result<Post, Error> {
         let post = self
             .post_repo
@@ -71,7 +75,14 @@ impl PostService {
             .await?
             .ok_or(Error::Post(PostError::NotFound))?;
         post.ensure_visible().map_err(Error::Post)?;
-        Ok(post)
+        self.record_view(post).await
+    }
+
+    async fn record_view(&self, post: Post) -> Result<Post, Error> {
+        self.post_repo.increment_views(post.id).await?;
+        let mut viewed = post;
+        viewed.views_count += 1;
+        Ok(viewed)
     }
 
     pub async fn get_post_for_user(&self, user_id: Uuid, post_id: Uuid) -> Result<Post, Error> {
@@ -82,7 +93,7 @@ impl PostService {
             .ok_or(Error::Post(PostError::NotFound))?;
 
         if post.is_visible() {
-            return Ok(post);
+            return self.record_view(post).await;
         }
 
         if post.status.is_draft() && post.deleted_at.is_none() {
@@ -151,6 +162,7 @@ impl PostService {
             updated.title = title.to_owned();
         }
         if let Some(content) = content {
+            Post::validate_content(&content).map_err(Error::Post)?;
             updated.content = content;
         }
         if let Some(tag_names) = tag_names {
@@ -287,6 +299,36 @@ mod tests {
 
         assert_eq!(result.id, post.id);
         assert!(result.status.is_draft());
+    }
+
+    #[actix_web::test]
+    async fn opening_a_published_post_increments_and_returns_its_view_count() {
+        let author_id = Uuid::new_v4();
+        let mut post = draft(author_id);
+        post.status = PostStatus::Published;
+        let post_id = post.id;
+
+        let mut post_repo = MockPostRepository::new();
+        post_repo
+            .expect_find_by_id()
+            .once()
+            .returning(move |_| Ok(Some(post.clone())));
+        post_repo
+            .expect_increment_views()
+            .once()
+            .returning(|_| Ok(()));
+
+        let service = PostService::new(
+            Arc::new(post_repo),
+            Arc::new(MockTagRepository::new()),
+            Arc::new(MockUserRepository::new()),
+        );
+        let viewed = service
+            .get_post_for_user(Uuid::new_v4(), post_id)
+            .await
+            .unwrap();
+
+        assert_eq!(viewed.views_count, 1);
     }
 
     #[actix_web::test]

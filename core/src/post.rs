@@ -54,6 +54,10 @@ pub struct TagResponse {
 pub struct PostResponse {
     pub id: Uuid,
     pub author_id: Uuid,
+    #[serde(default)]
+    pub author_username: String,
+    #[serde(default)]
+    pub author_avatar: Option<String>,
     pub title: String,
     pub content: serde_json::Value,
     pub status: String,

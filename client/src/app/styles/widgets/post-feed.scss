@@ -13,3 +13,8 @@
 .post-feed__more {
   justify-self: center;
 }
+
+.post-feed__item {
+  display: grid;
+  gap: var(--space-3);
+}

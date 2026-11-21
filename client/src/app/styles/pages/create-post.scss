@@ -6,16 +6,12 @@
 .create-post-page__content {
   display: grid;
   align-content: start;
-  gap: var(--space-10);
-  width: min(100%, 48rem);
-  margin: 0 auto;
-  padding: var(--space-page);
+  gap: var(--page-gap);
+  width: 100%;
 }
-
 
 @media (max-width: 600px) {
   .create-post-page__content {
-    gap: var(--space-8);
-    padding: var(--space-8);
+    gap: var(--page-gap);
   }
 }

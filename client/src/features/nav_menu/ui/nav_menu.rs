@@ -2,7 +2,7 @@ use yew::prelude::*;
 
 use crate::{
     app::Route,
-    shared::{menu::Menu, menu_link::MenuLink},
+    shared::{link::Link, menu::Menu},
 };
 
 use super::super::config::nav_menu::NAV_MENU;
@@ -22,9 +22,9 @@ pub fn nav_menu(props: &NavMenuProps) -> Html {
                     "nav-menu__link",
                     if item.is_primary { "nav-menu__link--primary action--green" } else { "" }
                 );
-                html! { <MenuLink<Route> {classes} key={item.id} to={item.to}>{
+                html! { <Link<Route> {classes} key={item.id} to={item.to}>{
                     html! { item.name }
-                }</MenuLink<Route>> }
+                }</Link<Route>> }
             }).collect::<Html>()}
         </Menu>
     }

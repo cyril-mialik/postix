@@ -13,14 +13,21 @@ pub struct PostCardProps {
 pub fn post_card(props: &PostCardProps) -> Html {
     let post = &props.post;
     let content = content_preview(post);
-    let author = post.author_id.to_string();
+    let author = if post.author_username.is_empty() {
+        post.author_id.to_string()[..8].to_owned()
+    } else {
+        post.author_username.clone()
+    };
     let date = post.created_at.format("%b %d, %Y").to_string();
 
     html! {
         <Link<Route> to={Route::Post { id: post.id.to_string() }} classes="post-card__link">
             <article class="post-card blueprint-block">
                 <div class="post-card__meta">
-                    <span class="post-card__author">{format!("@{}", &author[..8])}</span>
+                    if let Some(avatar) = &post.author_avatar {
+                        <img class="post-card__avatar" src={avatar.clone()} alt="" loading="lazy" />
+                    }
+                    <span class="post-card__author">{format!("@{author}")}</span>
                     <time datetime={post.created_at.to_rfc3339()}>{date}</time>
                     if post.status == "draft" {
                         <span class="post-card__status">{"DRAFT"}</span>

@@ -9,10 +9,14 @@ use crate::domain::entities::tag::Tag;
 
 use super::{media_type::MediaType, post_status::PostStatus, user::User};
 
+pub const POST_MAX_LENGTH: usize = 30_000;
+
 #[derive(Debug, Clone, Serialize, Deserialize, Validate)]
 pub struct Post {
     pub id: Uuid,
     pub author_id: Uuid,
+    pub author_username: String,
+    pub author_avatar: Option<String>,
 
     #[validate(length(min = 3, max = 256))]
     pub title: String,
@@ -41,6 +45,8 @@ impl Post {
         let post = Self {
             id: Uuid::new_v4(),
             author_id: dto.author_id,
+            author_username: String::new(),
+            author_avatar: None,
             title: dto.title.trim().to_owned(),
             content: dto.content,
             status: PostStatus::Published,
@@ -63,8 +69,27 @@ impl Post {
             }
             PostError::Validation(e.to_string())
         })?;
+        Self::validate_content(&post.content)?;
 
         Ok(post)
+    }
+
+    pub fn validate_content(content: &serde_json::Value) -> Result<(), PostError> {
+        let text = content
+            .as_str()
+            .or_else(|| {
+                content
+                    .as_object()
+                    .and_then(|object| object.get("text").or_else(|| object.get("body")))
+                    .and_then(serde_json::Value::as_str)
+            })
+            .map(str::to_owned)
+            .unwrap_or_else(|| content.to_string());
+
+        if text.chars().count() > POST_MAX_LENGTH {
+            return Err(PostError::InvalidContentLength);
+        }
+        Ok(())
     }
 
     pub fn average_rating(&self) -> f64 {
@@ -135,6 +160,9 @@ pub enum PostError {
     #[error("Неверная длина заголовка (3–256)")]
     InvalidTitleLength,
 
+    #[error("Текст поста не может превышать {POST_MAX_LENGTH} символов")]
+    InvalidContentLength,
+
     #[error("Доступ запрещён")]
     Forbidden,
 
@@ -180,5 +208,17 @@ mod tests {
         post.status = PostStatus::Published;
         post.deleted_at = Some(Utc::now());
         assert!(matches!(post.ensure_visible(), Err(PostError::NotFound)));
+    }
+
+    #[test]
+    fn validates_post_body_length_in_unicode_characters() {
+        let valid = serde_json::json!({"text": "é".repeat(POST_MAX_LENGTH)});
+        let invalid = serde_json::json!({"text": "é".repeat(POST_MAX_LENGTH + 1)});
+
+        assert!(Post::validate_content(&valid).is_ok());
+        assert!(matches!(
+            Post::validate_content(&invalid),
+            Err(PostError::InvalidContentLength)
+        ));
     }
 }

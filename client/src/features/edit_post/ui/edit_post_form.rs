@@ -6,6 +6,7 @@ use postix_core::post::PostResponse;
 use crate::{
     entities::post::{content_text, post_api},
     features::auth::AuthContext,
+    shared::confirm_dialog::ConfirmDialog,
 };
 
 #[derive(Properties, PartialEq)]
@@ -31,22 +32,29 @@ pub fn edit_post_form(props: &EditPostFormProps) -> Html {
     });
     let error = use_state(|| None::<String>);
     let saving = use_state(|| false);
+    let confirming = use_state(|| false);
 
     let on_submit = {
+        let confirming = confirming.clone();
+        Callback::from(move |event: SubmitEvent| {
+            event.prevent_default();
+            confirming.set(true);
+        })
+    };
+    let on_confirm = {
         let title = title.clone();
         let text = text.clone();
         let tags = tags.clone();
         let error = error.clone();
         let saving = saving.clone();
+        let confirming = confirming.clone();
         let auth = auth.clone();
         let post_id = props.post.id.to_string();
         let on_saved = props.on_saved.clone();
-        Callback::from(move |event: SubmitEvent| {
-            event.prevent_default();
+        Callback::from(move |_| {
             if *saving {
                 return;
             }
-
             error.set(None);
             saving.set(true);
             let title_value = (*title).clone();
@@ -54,6 +62,7 @@ pub fn edit_post_form(props: &EditPostFormProps) -> Html {
             let tags_value = (*tags).clone();
             let error = error.clone();
             let saving = saving.clone();
+            let confirming = confirming.clone();
             let auth = auth.clone();
             let post_id = post_id.clone();
             let on_saved = on_saved.clone();
@@ -70,12 +79,22 @@ pub fn edit_post_form(props: &EditPostFormProps) -> Html {
                     })
                     .await;
                 match result {
-                    Ok(post) => on_saved.emit(post),
-                    Err(message) => error.set(Some(message.to_string())),
+                    Ok(post) => {
+                        confirming.set(false);
+                        on_saved.emit(post);
+                    }
+                    Err(message) => {
+                        error.set(Some(message.to_string()));
+                        confirming.set(false);
+                    }
                 }
                 saving.set(false);
             });
         })
+    };
+    let on_cancel_confirmation = {
+        let confirming = confirming.clone();
+        Callback::from(move |_| confirming.set(false))
     };
 
     let on_title = {
@@ -105,6 +124,7 @@ pub fn edit_post_form(props: &EditPostFormProps) -> Html {
     };
 
     html! {
+        <>
         <form class="create-post blueprint-block" onsubmit={on_submit}>
             <label class="create-post__label" for="edit-post-title">{"Title"}</label>
             <input
@@ -123,6 +143,7 @@ pub fn edit_post_form(props: &EditPostFormProps) -> Html {
                 id="edit-post-text"
                 class="create-post__textarea"
                 value={(*text).clone()}
+                maxlength="30000"
                 rows="5"
                 required=true
                 disabled={*saving}
@@ -150,5 +171,17 @@ pub fn edit_post_form(props: &EditPostFormProps) -> Html {
                 </button>
             </div>
         </form>
+        if *confirming {
+            <ConfirmDialog
+                title="Save changes?"
+                message="The edited story will replace its current version. A snapshot of the previous version will be kept."
+                confirm_label="Save changes"
+                confirm_classes={classes!("action--green")}
+                busy={*saving}
+                on_confirm={on_confirm}
+                on_cancel={on_cancel_confirmation}
+            />
+        }
+        </>
     }
 }

@@ -3,6 +3,7 @@ use postix_core::post::{
     PostPublicationStatus, PostRatingRequest, PostRatingSummary, PostRequest, PostResponse,
     PostsResponse, UpdatePostRequest,
 };
+use postix_core::report::{CreateReportRequest, ReportReason};
 use serde::Deserialize;
 use serde_json::json;
 
@@ -30,6 +31,32 @@ pub fn post_rating_endpoint(id: &str) -> String {
     format!("{API_URL}/posts/{id}/rating")
 }
 
+pub fn bookmarks_endpoint() -> String {
+    format!("{API_URL}/bookmarks")
+}
+
+pub fn post_bookmark_endpoint(id: &str) -> String {
+    format!("{API_URL}/posts/{id}/bookmark")
+}
+
+pub fn post_report_endpoint(id: &str) -> String {
+    format!("{API_URL}/posts/{id}/reports")
+}
+
+pub fn build_report_request(
+    reason: ReportReason,
+    message: &str,
+) -> Result<CreateReportRequest, String> {
+    let message = message.trim();
+    if message.chars().count() > 3_000 {
+        return Err("Report message must be 3000 characters or fewer.".to_owned());
+    }
+    Ok(CreateReportRequest {
+        reason,
+        message: (!message.is_empty()).then(|| message.to_owned()),
+    })
+}
+
 pub fn build_post_request(
     title: &str,
     text: &str,
@@ -45,6 +72,9 @@ pub fn build_post_request(
     }
     if text.is_empty() {
         return Err("Write something before saving.".to_owned());
+    }
+    if text.chars().count() > 30_000 {
+        return Err("Post text must be 30000 characters or fewer.".to_owned());
     }
 
     let mut tag_names = Vec::new();
@@ -155,6 +185,52 @@ pub async fn rate_post(token: &str, id: &str, rating: i32) -> Result<PostRatingS
         .json()
         .await
         .map_err(|error| ApiError::Message(error.to_string()))
+}
+
+pub async fn get_bookmarks(token: &str) -> Result<Vec<String>, ApiError> {
+    let response = Request::get(&bookmarks_endpoint())
+        .header("Authorization", &format!("Bearer {token}"))
+        .send()
+        .await
+        .map_err(|error| ApiError::Message(error.to_string()))?;
+    ensure_success(response, "Could not load your bookmarks.")
+        .await?
+        .json()
+        .await
+        .map_err(|error| ApiError::Message(error.to_string()))
+}
+
+pub async fn set_bookmark(token: &str, id: &str, bookmarked: bool) -> Result<(), ApiError> {
+    let request = if bookmarked {
+        Request::post(&post_bookmark_endpoint(id))
+    } else {
+        Request::delete(&post_bookmark_endpoint(id))
+    };
+    let response = request
+        .header("Authorization", &format!("Bearer {token}"))
+        .send()
+        .await
+        .map_err(|error| ApiError::Message(error.to_string()))?;
+    ensure_success(response, "Could not update this bookmark.").await?;
+    Ok(())
+}
+
+pub async fn create_report(
+    token: &str,
+    id: &str,
+    reason: ReportReason,
+    message: &str,
+) -> Result<(), ApiError> {
+    let body = build_report_request(reason, message).map_err(ApiError::Message)?;
+    let response = Request::post(&post_report_endpoint(id))
+        .header("Authorization", &format!("Bearer {token}"))
+        .json(&body)
+        .map_err(|error| ApiError::Message(error.to_string()))?
+        .send()
+        .await
+        .map_err(|error| ApiError::Message(error.to_string()))?;
+    ensure_success(response, "Could not report this post.").await?;
+    Ok(())
 }
 
 fn build_post_rating_request(rating: i32) -> Result<PostRatingRequest, String> {
@@ -270,6 +346,15 @@ mod tests {
             "/api/posts/7b6ab915-1d04-44f2-b44d-1e84de73a310"
         );
         assert_eq!(post_rating_endpoint("post-id"), "/api/posts/post-id/rating");
+        assert_eq!(bookmarks_endpoint(), "/api/bookmarks");
+        assert_eq!(
+            post_bookmark_endpoint("post-id"),
+            "/api/posts/post-id/bookmark"
+        );
+        assert_eq!(
+            post_report_endpoint("post-id"),
+            "/api/posts/post-id/reports"
+        );
         assert_eq!(
             post_endpoint("7b6ab915-1d04-44f2-b44d-1e84de73a310"),
             "/api/posts/7b6ab915-1d04-44f2-b44d-1e84de73a310"
@@ -329,12 +414,52 @@ mod tests {
     }
 
     #[test]
+    fn post_request_enforces_unicode_body_limit() {
+        assert!(
+            build_post_request(
+                "A valid title",
+                &"é".repeat(30_000),
+                "",
+                PostPublicationStatus::Published
+            )
+            .is_ok()
+        );
+        assert!(
+            build_post_request(
+                "A valid title",
+                &"é".repeat(30_001),
+                "",
+                PostPublicationStatus::Published
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
     fn update_post_request_includes_validated_tags_and_content() {
         let request = build_update_post_request(" A title ", " body ", "Rust, rust").unwrap();
 
         assert_eq!(request.title.as_deref(), Some("A title"));
         assert_eq!(request.content, Some(json!({"text": "body"})));
         assert_eq!(request.tag_names, Some(vec!["rust".to_owned()]));
+    }
+
+    #[test]
+    fn report_request_trims_optional_message_and_enforces_length() {
+        assert_eq!(
+            build_report_request(ReportReason::Spam, " reason "),
+            Ok(CreateReportRequest {
+                reason: ReportReason::Spam,
+                message: Some("reason".to_owned()),
+            })
+        );
+        assert_eq!(
+            build_report_request(ReportReason::Other, "  ")
+                .unwrap()
+                .message,
+            None
+        );
+        assert!(build_report_request(ReportReason::Other, &"é".repeat(3_001)).is_err());
     }
 
     #[test]

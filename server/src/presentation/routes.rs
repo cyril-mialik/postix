@@ -1,6 +1,6 @@
 use actix_web::web;
 
-use super::handlers::{auth, health, post, profile, rating, review};
+use super::handlers::{auth, bookmark, health, post, profile, rating, report, review};
 
 pub fn api_configure(cfg: &mut web::ServiceConfig) {
     cfg.service(auth::sign_up)
@@ -26,6 +26,10 @@ pub fn protected_api_configure(cfg: &mut web::ServiceConfig) {
         .service(post::get_post)
         .service(post::update_post)
         .service(post::delete_post);
+    cfg.service(bookmark::get_bookmarks)
+        .service(bookmark::bookmark_post)
+        .service(bookmark::unbookmark_post)
+        .service(report::create_report);
 }
 
 #[cfg(test)]
@@ -110,6 +114,22 @@ mod tests {
         .await;
         assert_eq!(create_post.status(), StatusCode::UNAUTHORIZED);
 
+        let bookmarks = test::call_service(
+            &app,
+            test::TestRequest::get().uri("/api/bookmarks").to_request(),
+        )
+        .await;
+        assert_eq!(bookmarks.status(), StatusCode::UNAUTHORIZED);
+
+        let report = test::call_service(
+            &app,
+            test::TestRequest::post()
+                .uri("/api/posts/00000000-0000-0000-0000-000000000001/reports")
+                .to_request(),
+        )
+        .await;
+        assert_eq!(report.status(), StatusCode::UNAUTHORIZED);
+
         let reviews = test::call_service(
             &app,
             test::TestRequest::get()
@@ -188,16 +208,29 @@ mod tests {
             .once()
             .returning(|user| Ok(user.clone()));
         let service = ProfileService::new(Arc::new(user_repo));
+        let mut post_repo = MockPostRepository::new();
+        post_repo
+            .expect_total_views_by_author()
+            .once()
+            .returning(|_| Ok(42));
+        let post_service = PostService::new(
+            Arc::new(post_repo),
+            Arc::new(MockTagRepository::new()),
+            Arc::new(MockUserRepository::new()),
+        );
         let secret = "profile-test-secret";
         let token = generate_access_token(secret, auth_id).unwrap();
         let app = test::init_service(
-            App::new().app_data(web::Data::new(service)).service(
-                web::scope("/api").service(
-                    web::scope("")
-                        .wrap(JwtAuth::new(secret))
-                        .configure(protected_api_configure),
+            App::new()
+                .app_data(web::Data::new(service))
+                .app_data(web::Data::new(post_service))
+                .service(
+                    web::scope("/api").service(
+                        web::scope("")
+                            .wrap(JwtAuth::new(secret))
+                            .configure(protected_api_configure),
+                    ),
                 ),
-            ),
         )
         .await;
 
@@ -221,6 +254,7 @@ mod tests {
         assert_eq!(updated.first_name.as_deref(), Some("Ada"));
         assert_eq!(updated.last_name, None);
         assert_eq!(updated.avatar, None);
+        assert_eq!(updated.total_views_count, 42);
     }
 
     #[actix_web::test]
@@ -685,6 +719,10 @@ mod tests {
             .expect_find_by_id()
             .once()
             .returning(move |_| Ok(Some(post.clone())));
+        post_repo
+            .expect_increment_views()
+            .once()
+            .returning(|_| Ok(()));
         let post_service = PostService::new(
             Arc::new(post_repo),
             Arc::new(MockTagRepository::new()),
@@ -716,6 +754,7 @@ mod tests {
         let body: PostResponse = test::read_body_json(response).await;
         assert_eq!(body.id, post_id);
         assert_eq!(body.title, "A visible story");
+        assert_eq!(body.views_count, 1);
     }
 
     #[actix_web::test]

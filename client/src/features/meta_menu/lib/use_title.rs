@@ -10,8 +10,10 @@ pub fn use_title() -> &str {
     match route {
         Some(Route::Home) => "home",
         Some(Route::Profile) => "profile",
+        Some(Route::EditProfile) => "profile",
         Some(Route::Search) => "search",
         Some(Route::CreatePost) => "write",
+        Some(Route::EditPost { .. }) => "post",
         Some(Route::Post { .. }) => "post",
         Some(Route::Auth) => "auth",
         Some(Route::NotFound) => "not-found",

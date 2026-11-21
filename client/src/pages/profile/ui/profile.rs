@@ -1,6 +1,8 @@
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
+use yew_router::prelude::*;
 
+use crate::app::Route;
 use postix_core::post::{PostPublicationStatus, PostResponse};
 use postix_core::user::UserResponse;
 
@@ -17,9 +19,16 @@ use crate::{
 
 const PAGE_SIZE: usize = 20;
 
+#[derive(Properties, PartialEq)]
+pub struct ProfileProps {
+    #[prop_or_default]
+    pub editing_mode: bool,
+}
+
 #[function_component(Profile)]
-pub fn profile() -> Html {
+pub fn profile(props: &ProfileProps) -> Html {
     let auth = use_context::<AuthContext>().expect("AuthContext not found");
+    let navigator = use_navigator().expect("Navigator not found");
     let user = use_state(|| None::<UserResponse>);
     let posts = use_state(Vec::<PostResponse>::new);
     let offset = use_state(|| 0_usize);
@@ -30,7 +39,16 @@ pub fn profile() -> Html {
     let active_tab = use_state(|| PostPublicationStatus::Published);
     let confirm_sign_out = use_state(|| false);
     let signing_out = use_state(|| false);
-    let editing_profile = use_state(|| false);
+    let editing_profile = use_state(|| props.editing_mode);
+
+    {
+        let editing_profile = editing_profile.clone();
+        let editing_mode = props.editing_mode;
+        use_effect_with(editing_mode, move |editing_mode| {
+            editing_profile.set(*editing_mode);
+            || ()
+        });
+    }
 
     {
         let user = user.clone();
@@ -176,150 +194,149 @@ pub fn profile() -> Html {
     let on_draft_tab =
         { Callback::from(move |_| on_select_tab.emit(PostPublicationStatus::Draft)) };
     let on_edit_profile = {
-        let editing_profile = editing_profile.clone();
-        Callback::from(move |_| editing_profile.set(true))
+        let navigator = navigator.clone();
+        Callback::from(move |_| navigator.push(&Route::EditProfile))
     };
     let on_cancel_profile_edit = {
-        let editing_profile = editing_profile.clone();
-        Callback::from(move |_| editing_profile.set(false))
+        let navigator = navigator.clone();
+        Callback::from(move |_| navigator.push(&Route::Profile))
     };
     let on_profile_saved = {
         let user = user.clone();
-        let editing_profile = editing_profile.clone();
+        let navigator = navigator.clone();
         Callback::from(move |updated: UserResponse| {
             user.set(Some(updated));
-            editing_profile.set(false);
+            navigator.push(&Route::Profile);
         })
     };
 
     html! {
-        <Wrapper classes="page profile">
-            <Head classes="page__head profile__head" />
-            <Body classes="page__body profile__body">
-                <div class="profile__content">
-                    <Intro
-                        subtitle="YOUR ACCOUNT"
-                        title="Profile"
-                        description="Manage your account and keep track of your published stories and drafts."
-                    />
-                    if *loading {
-                        <p role="status">{"Loading profile..."}</p>
-                    }
-                    if let Some(message) = &*error {
-                        <p class="profile__error blueprint-block blueprint-block--error" role="alert">{message}</p>
-                    }
-                    if let Some(user) = &*user {
-                        <section class="profile__card blueprint-block" aria-label="Your profile details">
-                            <div class="profile__actions">
-                                if !*editing_profile {
-                                    <button
-                                        type="button"
-                                        class="action--green"
-                                        onclick={on_edit_profile}
-                                    >
-                                        {"Edit profile"}
-                                    </button>
-                                }
+        <Wrapper classes="page">
+            <Head classes="page__head" />
+            <Body classes="page__body">
+                <Intro
+                    subtitle="YOUR ACCOUNT"
+                    title="Profile"
+                    description="Manage your account and keep track of your published stories and drafts."
+                />
+                if *loading {
+                    <p role="status">{"Loading profile..."}</p>
+                }
+                if let Some(message) = &*error {
+                    <p class="profile__error blueprint-block blueprint-block--error" role="alert">{message}</p>
+                }
+                if let Some(user) = &*user {
+                    <section class="profile__card blueprint-block" aria-label="Your profile details">
+                        <div class="profile__actions">
+                            if !*editing_profile {
                                 <button
                                     type="button"
-                                    class="profile__sign-out action--red"
-                                    disabled={*signing_out}
-                                    onclick={on_open_sign_out}
+                                    class="action--green"
+                                    onclick={on_edit_profile}
                                 >
-                                    {"Sign out"}
-                                </button>
-                            </div>
-                            if *editing_profile {
-                                <EditProfileForm
-                                    user={(*user).clone()}
-                                    on_saved={on_profile_saved.clone()}
-                                    on_cancel={on_cancel_profile_edit.clone()}
-                                />
-                            } else {
-                                if let Some(avatar) = &user.avatar {
-                                    <img class="profile__avatar" src={avatar.clone()} alt="" />
-                                } else {
-                                    <div class="profile__avatar" aria-hidden="true">
-                                        {user.username.chars().next().unwrap_or('P').to_uppercase().to_string()}
-                                    </div>
-                                }
-                                <div class="profile__identity">
-                                    <h2>{format!("@{}", user.username)}</h2>
-                                    <p>{user.email.clone()}</p>
-                                </div>
-                            }
-                            <dl class="profile__stats">
-                                <div><dt>{"Stories"}</dt><dd>{user.posts_count}</dd></div>
-                                <div><dt>{"Followers"}</dt><dd>{user.followers_count}</dd></div>
-                                <div><dt>{"Following"}</dt><dd>{user.following_count}</dd></div>
-                            </dl>
-                        </section>
-                        <section class="profile__stories" aria-labelledby="profile-stories-heading">
-                            <div class="profile__stories-header blueprint-block">
-                                <h2 id="profile-stories-heading">{"Your stories"}</h2>
-                                <div class="profile__tabs" role="tablist" aria-label="Your stories">
-                                <button
-                                    type="button"
-                                    role="tab"
-                                    aria-selected={if *active_tab == PostPublicationStatus::Published { "true" } else { "false" }}
-                                    class={classes!(
-                                        "profile__tab",
-                                        if *active_tab == PostPublicationStatus::Published { "action--active" } else { "" }
-                                    )}
-                                    onclick={on_published_tab}
-                                >
-                                    {"Published"}
-                                </button>
-                                <button
-                                    type="button"
-                                    role="tab"
-                                    aria-selected={if *active_tab == PostPublicationStatus::Draft { "true" } else { "false" }}
-                                    class={classes!(
-                                        "profile__tab",
-                                        if *active_tab == PostPublicationStatus::Draft { "action--active" } else { "" }
-                                    )}
-                                    onclick={on_draft_tab}
-                                >
-                                    {"Draft"}
-                                </button>
-                                </div>
-                            </div>
-                            if !*loading && posts.is_empty() {
-                                <p class="profile__stories-empty blueprint-block">
-                                    {if *active_tab == PostPublicationStatus::Published {
-                                        "You haven't published any stories yet."
-                                    } else {
-                                        "You don't have any drafts yet."
-                                    }}
-                                </p>
-                            } else {
-                                {for posts.iter().cloned().map(|post| html! {
-                                    <PostCard post={post.clone()} key={post.id.to_string()} />
-                                })}
-                            }
-                            if *has_more {
-                                <button
-                                    type="button"
-                                    disabled={*loading_more}
-                                    onclick={on_load_more}
-                                >
-                                    {if *loading_more { "Loading..." } else { "Load more stories" }}
+                                    {"Edit profile"}
                                 </button>
                             }
-                        </section>
-                        if *confirm_sign_out {
-                            <ConfirmDialog
-                                title="Sign out?"
-                                message="You will need to sign in again to access your profile."
-                                confirm_label="Sign out"
-                                confirm_classes="action--red"
-                                busy={*signing_out}
-                                on_confirm={on_confirm_sign_out}
-                                on_cancel={on_cancel_sign_out}
+                            <button
+                                type="button"
+                                class="profile__sign-out action--red"
+                                disabled={*signing_out}
+                                onclick={on_open_sign_out}
+                            >
+                                {"Sign out"}
+                            </button>
+                        </div>
+                        if *editing_profile {
+                            <EditProfileForm
+                                user={(*user).clone()}
+                                on_saved={on_profile_saved.clone()}
+                                on_cancel={on_cancel_profile_edit.clone()}
                             />
+                        } else {
+                            if let Some(avatar) = &user.avatar {
+                                <img class="profile__avatar" src={avatar.clone()} alt="" />
+                            } else {
+                                <div class="profile__avatar" aria-hidden="true">
+                                    {user.username.chars().next().unwrap_or('P').to_uppercase().to_string()}
+                                </div>
+                            }
+                            <div class="profile__identity">
+                                <h2>{format!("@{}", user.username)}</h2>
+                                <p>{user.email.clone()}</p>
+                            </div>
                         }
+                        <dl class="profile__stats">
+                            <div><dt>{"Stories"}</dt><dd>{user.posts_count}</dd></div>
+                            <div><dt>{"Reads"}</dt><dd>{user.total_views_count}</dd></div>
+                            <div><dt>{"Followers"}</dt><dd>{user.followers_count}</dd></div>
+                            <div><dt>{"Following"}</dt><dd>{user.following_count}</dd></div>
+                        </dl>
+                    </section>
+                    <section class="profile__stories" aria-labelledby="profile-stories-heading">
+                        <div class="profile__stories-header blueprint-block">
+                            <h2 id="profile-stories-heading">{"Your stories"}</h2>
+                            <div class="profile__tabs" role="tablist" aria-label="Your stories">
+                            <button
+                                type="button"
+                                role="tab"
+                                aria-selected={if *active_tab == PostPublicationStatus::Published { "true" } else { "false" }}
+                                class={classes!(
+                                    "profile__tab",
+                                    if *active_tab == PostPublicationStatus::Published { "action--active" } else { "" }
+                                )}
+                                onclick={on_published_tab}
+                            >
+                                {"Published"}
+                            </button>
+                            <button
+                                type="button"
+                                role="tab"
+                                aria-selected={if *active_tab == PostPublicationStatus::Draft { "true" } else { "false" }}
+                                class={classes!(
+                                    "profile__tab",
+                                    if *active_tab == PostPublicationStatus::Draft { "action--active" } else { "" }
+                                )}
+                                onclick={on_draft_tab}
+                            >
+                                {"Draft"}
+                            </button>
+                            </div>
+                        </div>
+                        if !*loading && posts.is_empty() {
+                            <p class="profile__stories-empty blueprint-block">
+                                {if *active_tab == PostPublicationStatus::Published {
+                                    "You haven't published any stories yet."
+                                } else {
+                                    "You don't have any drafts yet."
+                                }}
+                            </p>
+                        } else {
+                            {for posts.iter().cloned().map(|post| html! {
+                                <PostCard post={post.clone()} key={post.id.to_string()} />
+                            })}
+                        }
+                        if *has_more {
+                            <button
+                                type="button"
+                                disabled={*loading_more}
+                                onclick={on_load_more}
+                            >
+                                {if *loading_more { "Loading..." } else { "Load more stories" }}
+                            </button>
+                        }
+                    </section>
+                    if *confirm_sign_out {
+                        <ConfirmDialog
+                            title="Sign out?"
+                            message="You will need to sign in again to access your profile."
+                            confirm_label="Sign out"
+                            confirm_classes="action--red"
+                            busy={*signing_out}
+                            on_confirm={on_confirm_sign_out}
+                            on_cancel={on_cancel_sign_out}
+                        />
                     }
-                </div>
+                }
             </Body>
         </Wrapper>
     }

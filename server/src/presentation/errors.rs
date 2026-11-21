@@ -62,6 +62,7 @@ fn post_error_response(e: &PostError) -> HttpResponse {
         PostError::NotFound => (StatusCode::NOT_FOUND, "post not found"),
         PostError::AlreadyExists => (StatusCode::CONFLICT, "post already exists"),
         PostError::InvalidTitleLength => (StatusCode::BAD_REQUEST, "invalid title length"),
+        PostError::InvalidContentLength => (StatusCode::BAD_REQUEST, "invalid post content length"),
         PostError::Forbidden => (StatusCode::FORBIDDEN, "forbidden"),
         PostError::Validation(msg) => (StatusCode::BAD_REQUEST, msg.as_str()),
     };
@@ -99,6 +100,9 @@ fn report_error_response(e: &ReportError) -> HttpResponse {
     let (status, message) = match e {
         ReportError::NotFound => (StatusCode::NOT_FOUND, "report not found"),
         ReportError::AlreadyExists => (StatusCode::CONFLICT, "report already exists"),
+        ReportError::InvalidMessageLength => {
+            (StatusCode::BAD_REQUEST, "invalid report message length")
+        }
         ReportError::Validation(msg) => (StatusCode::BAD_REQUEST, msg.as_str()),
     };
     HttpResponse::build(status).json(json!({ "error": message }))

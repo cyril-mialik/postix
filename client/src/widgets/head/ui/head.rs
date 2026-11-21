@@ -1,7 +1,7 @@
 use yew::prelude::*;
 
 use crate::{
-    features::{auth::AuthContext, auth_menu::AuthMenu, meta_menu::MetaMenu, nav_menu::NavMenu},
+    features::{auth::AuthContext, auth_menu::AuthMenu, main_menu::MainMenu, meta_menu::MetaMenu},
     shared::head::Head as SharedHead,
 };
 
@@ -21,7 +21,7 @@ pub fn head(props: &HeadProps) -> Html {
             <MetaMenu classes="head-widget__meta" />
 
             if is_authenticated {
-                <NavMenu classes="head-widget__nav" />
+                <MainMenu classes="head-widget__nav" />
             } else {
                 <AuthMenu classes="head-widget__auth" />
             }

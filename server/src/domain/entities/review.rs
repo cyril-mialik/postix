@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
 
-const REVIEW_MAX_LENGTH: usize = 5000;
+const REVIEW_MAX_LENGTH: usize = 10_000;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Review {
@@ -36,7 +36,7 @@ impl Review {
 
 #[derive(Debug, Error)]
 pub enum ReviewError {
-    #[error("Ревью должно быть от 1 до 5000 символов")]
+    #[error("Ревью должно быть от 1 до 10000 символов")]
     InvalidLength,
 
     #[error("Ревью не найдено")]

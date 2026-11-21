@@ -76,6 +76,8 @@ impl PostgresPostRepository {
         Ok(Post {
             id: row.id,
             author_id: row.author_id,
+            author_username: row.author_username,
+            author_avatar: row.author_avatar,
             title: row.title,
             content: row.content,
             status: PostStatus::from_id(row.status_id).unwrap_or(PostStatus::Draft),
@@ -97,6 +99,8 @@ impl PostgresPostRepository {
 struct PostRow {
     pub id: Uuid,
     pub author_id: Uuid,
+    pub author_username: String,
+    pub author_avatar: Option<String>,
     pub title: String,
     pub content: serde_json::Value,
     pub status_id: i32,
@@ -115,7 +119,8 @@ impl PostRepository for PostgresPostRepository {
     async fn find_by_id(&self, id: Uuid) -> Result<Option<Post>, Error> {
         let row = sqlx::query_as::<_, PostRow>(
             r#"
-            SELECT p.id, profile.auth_id AS author_id, p.title, p.content, p.status_id,
+            SELECT p.id, profile.auth_id AS author_id, profile.username AS author_username,
+                   profile.avatar AS author_avatar, p.title, p.content, p.status_id,
                    p.rating_sum, p.rating_count, p.reviews_count, p.views_count,
                    p.created_at, p.updated_at, p.deleted_at, p.deleted_by
             FROM post p
@@ -137,7 +142,8 @@ impl PostRepository for PostgresPostRepository {
     async fn find_feed(&self, limit: i64, offset: i64) -> Result<Vec<Post>, Error> {
         let rows = sqlx::query_as::<_, PostRow>(
             r#"
-            SELECT p.id, profile.auth_id AS author_id, p.title, p.content, p.status_id,
+            SELECT p.id, profile.auth_id AS author_id, profile.username AS author_username,
+                   profile.avatar AS author_avatar, p.title, p.content, p.status_id,
                    p.rating_sum, p.rating_count, p.reviews_count, p.views_count,
                    p.created_at, p.updated_at, p.deleted_at, p.deleted_by
             FROM post p
@@ -169,7 +175,8 @@ impl PostRepository for PostgresPostRepository {
     ) -> Result<Vec<Post>, Error> {
         let rows = sqlx::query_as::<_, PostRow>(
             r#"
-            SELECT p.id, profile.auth_id AS author_id, p.title, p.content, p.status_id,
+            SELECT p.id, profile.auth_id AS author_id, profile.username AS author_username,
+                   profile.avatar AS author_avatar, p.title, p.content, p.status_id,
                    p.rating_sum, p.rating_count, p.reviews_count, p.views_count,
                    p.created_at, p.updated_at, p.deleted_at, p.deleted_by
             FROM post p
@@ -201,14 +208,15 @@ impl PostRepository for PostgresPostRepository {
             .await
             .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
 
-        let profile_id = sqlx::query_scalar::<_, Uuid>(
-            "SELECT id FROM profile WHERE auth_id = $1 AND deleted_at IS NULL",
+        let profile = sqlx::query_as::<_, (Uuid, String, Option<String>)>(
+            "SELECT id, username, avatar FROM profile WHERE auth_id = $1 AND deleted_at IS NULL",
         )
         .bind(post.author_id)
         .fetch_optional(&mut *tx)
         .await
         .map_err(|e| Error::System(SystemError::Database(e.to_string())))?
         .ok_or(Error::User(UserError::NotFound))?;
+        let (profile_id, username, avatar) = profile;
 
         sqlx::query!(
             r#"
@@ -252,7 +260,10 @@ impl PostRepository for PostgresPostRepository {
             .await
             .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
 
-        Ok(post.clone())
+        let mut created = post.clone();
+        created.author_username = username;
+        created.author_avatar = avatar;
+        Ok(created)
     }
 
     async fn update(&self, post: &Post) -> Result<Post, Error> {
@@ -261,6 +272,29 @@ impl PostRepository for PostgresPostRepository {
             .begin()
             .await
             .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
+
+        sqlx::query(
+            r#"
+            INSERT INTO post_history (post_id, snapshot)
+            SELECT p.id, jsonb_build_object(
+                'title', p.title,
+                'content', p.content,
+                'status_id', p.status_id,
+                'tags', COALESCE(
+                    (SELECT jsonb_agg(t.name ORDER BY t.name)
+                     FROM post_tag pt JOIN tag t ON t.id = pt.tag_id
+                     WHERE pt.post_id = p.id),
+                    '[]'::jsonb
+                )
+            )
+            FROM post p
+            WHERE p.id = $1
+            "#,
+        )
+        .bind(post.id)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
 
         sqlx::query!(
             "UPDATE post SET title = $2, content = $3, status_id = $4, updated_at = NOW() WHERE id = $1",
@@ -324,6 +358,21 @@ impl PostRepository for PostgresPostRepository {
         .await
         .map_err(|e| Error::System(SystemError::Database(e.to_string())))?;
         Ok(())
+    }
+
+    async fn total_views_by_author(&self, author_id: Uuid) -> Result<i64, Error> {
+        sqlx::query_scalar::<_, i64>(
+            r#"
+            SELECT COALESCE(SUM(p.views_count), 0)::BIGINT
+            FROM post p
+            JOIN profile ON profile.id = p.profile_id
+            WHERE profile.auth_id = $1
+            "#,
+        )
+        .bind(author_id)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|e| Error::System(SystemError::Database(e.to_string())))
     }
 
     async fn update_reviews_count(&self, id: Uuid, delta: i32) -> Result<(), Error> {

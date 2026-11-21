@@ -1,5 +1,13 @@
 use postix_core::post::PostResponse;
 
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
+pub enum SearchField {
+    #[default]
+    All,
+    Title,
+    Content,
+}
+
 pub fn content_text(post: &PostResponse) -> String {
     match &post.content {
         serde_json::Value::String(text) => text.clone(),
@@ -16,7 +24,7 @@ pub fn content_text(post: &PostResponse) -> String {
 pub fn content_preview(post: &PostResponse) -> String {
     let text = content_text(post);
     let mut chars = text.chars();
-    let preview = chars.by_ref().take(150).collect::<String>();
+    let preview = chars.by_ref().take(200).collect::<String>();
     if chars.next().is_some() {
         format!("{preview}…")
     } else {
@@ -24,18 +32,35 @@ pub fn content_preview(post: &PostResponse) -> String {
     }
 }
 
-pub fn matches_query(post: &PostResponse, query: &str) -> bool {
+pub fn matches_query_in_field(post: &PostResponse, query: &str, field: SearchField) -> bool {
     let query = query.trim().to_lowercase();
     if query.is_empty() {
         return true;
     }
 
-    post.title.to_lowercase().contains(&query)
-        || content_text(post).to_lowercase().contains(&query)
-        || post
-            .tags
-            .iter()
-            .any(|tag| tag.name.to_lowercase().contains(&query))
+    if let Some(username) = query.strip_prefix('@') {
+        return username.is_empty() || post.author_username.to_lowercase().contains(username);
+    }
+    if let Some(tag) = query.strip_prefix('#') {
+        return tag.is_empty()
+            || post
+                .tags
+                .iter()
+                .any(|item| item.name.to_lowercase().contains(tag));
+    }
+
+    match field {
+        SearchField::Title => post.title.to_lowercase().contains(&query),
+        SearchField::Content => content_text(post).to_lowercase().contains(&query),
+        SearchField::All => {
+            post.title.to_lowercase().contains(&query)
+                || content_text(post).to_lowercase().contains(&query)
+                || post
+                    .tags
+                    .iter()
+                    .any(|tag| tag.name.to_lowercase().contains(&query))
+        }
+    }
 }
 
 #[cfg(test)]
@@ -47,6 +72,8 @@ mod tests {
         serde_json::from_value(json!({
             "id": "00000000-0000-0000-0000-000000000000",
             "author_id": "00000000-0000-0000-0000-000000000000",
+            "author_username": "rust_writer",
+            "author_avatar": null,
             "title": "Rust notes",
             "content": content,
             "status": "published",
@@ -73,23 +100,47 @@ mod tests {
     }
 
     #[test]
-    fn preview_truncates_after_150_unicode_characters() {
-        let exactly_limit = post(json!({"text": "é".repeat(150)}));
-        let over_limit = post(json!({"text": "é".repeat(151)}));
+    fn preview_truncates_after_200_unicode_characters() {
+        let exactly_limit = post(json!({"text": "é".repeat(200)}));
+        let over_limit = post(json!({"text": "é".repeat(201)}));
 
-        assert_eq!(content_preview(&exactly_limit), "é".repeat(150));
+        assert_eq!(content_preview(&exactly_limit), "é".repeat(200));
         assert_eq!(
             content_preview(&over_limit),
-            format!("{}…", "é".repeat(150))
+            format!("{}…", "é".repeat(200))
         );
     }
 
     #[test]
     fn feed_search_matches_title_content_and_tags_case_insensitively() {
         let post = post(json!({"text": "Building apps"}));
-        assert!(matches_query(&post, "RUST"));
-        assert!(matches_query(&post, "BUILDING"));
-        assert!(matches_query(&post, "program"));
-        assert!(!matches_query(&post, "unrelated"));
+        assert!(matches_query_in_field(&post, "RUST", SearchField::All));
+        assert!(matches_query_in_field(&post, "BUILDING", SearchField::All));
+        assert!(matches_query_in_field(&post, "program", SearchField::All));
+        assert!(!matches_query_in_field(
+            &post,
+            "unrelated",
+            SearchField::All
+        ));
+    }
+
+    #[test]
+    fn feed_search_supports_author_and_tag_prefixes_and_field_filters() {
+        let post = post(json!({"text": "Building apps"}));
+
+        assert!(matches_query_in_field(&post, "@rust", SearchField::All));
+        assert!(matches_query_in_field(&post, "#program", SearchField::All));
+        assert!(!matches_query_in_field(&post, "@another", SearchField::All));
+        assert!(matches_query_in_field(&post, "Rust", SearchField::Title));
+        assert!(!matches_query_in_field(
+            &post,
+            "Building",
+            SearchField::Title
+        ));
+        assert!(matches_query_in_field(
+            &post,
+            "Building",
+            SearchField::Content
+        ));
     }
 }
